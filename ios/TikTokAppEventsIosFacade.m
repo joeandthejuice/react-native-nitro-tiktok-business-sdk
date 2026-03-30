@@ -191,6 +191,58 @@ static BOOL TikTokAppEventsSdkConfigured = NO;
   }];
 }
 
++ (void)trackContentEventWithName:(NSString *)name
+                       properties:(NSDictionary<NSString *, id> *)properties
+                          eventId:(nullable NSString *)eventId {
+  [self runOnMain:^{
+    TikTokContentsEvent *event =
+        [self contentEventWithName:name eventId:eventId];
+
+    if (event == nil) {
+      [self trackEventWithName:name properties:properties eventId:eventId];
+      return;
+    }
+
+    NSString *contentType = [self normalizedString:properties[@"contentType"]];
+    if (contentType != nil) {
+      [event setContentType:contentType];
+    }
+
+    NSString *contentId = [self normalizedString:properties[@"contentId"]];
+    if (contentId != nil) {
+      [event setContentId:contentId];
+    }
+
+    NSString *description = [self normalizedString:properties[@"description"]];
+    if (description != nil) {
+      [event setDescription:description];
+    }
+
+    NSString *currency = [self normalizedCurrencyCode:properties[@"currency"]];
+    if (currency != nil) {
+      [event setCurrency:currency];
+    }
+
+    NSNumber *value = [self numberValue:properties[@"value"]];
+    if (value != nil) {
+      [event setValue:value.stringValue];
+    }
+
+    NSString *orderId = [self normalizedString:properties[@"orderId"]];
+    if (orderId != nil) {
+      [event addPropertyWithKey:@"order_id" value:orderId];
+    }
+
+    NSArray<TikTokContentParams *> *contents =
+        [self contentParamsArrayFromValue:properties[@"contents"]];
+    if (contents.count > 0) {
+      [event setContents:contents];
+    }
+
+    [TikTokBusiness trackTTEvent:event];
+  }];
+}
+
 + (void)fetchDeferredDeepLinkWithCompletion:
     (TikTokAppEventsDeferredDeepLinkCompletion)completion {
   [self runOnMain:^{
@@ -300,6 +352,102 @@ static BOOL TikTokAppEventsSdkConfigured = NO;
 
 + (NSNumber *_Nullable)numberValue:(id)value {
   return [value isKindOfClass:[NSNumber class]] ? value : nil;
+}
+
++ (NSString *_Nullable)normalizedCurrencyCode:(id)value {
+  NSString *normalized = [self normalizedString:value];
+  if (normalized == nil) {
+    return nil;
+  }
+
+  NSString *uppercased = normalized.uppercaseString;
+  NSRegularExpression *regex = [NSRegularExpression
+      regularExpressionWithPattern:@"^[A-Z]{3}$"
+                           options:0
+                             error:nil];
+  NSUInteger matches = [regex numberOfMatchesInString:uppercased
+                                              options:0
+                                                range:NSMakeRange(0, uppercased.length)];
+  return matches == 1 ? uppercased : nil;
+}
+
++ (TikTokContentsEvent *_Nullable)contentEventWithName:(NSString *)name
+                                               eventId:(NSString *_Nullable)eventId {
+  if ([name isEqualToString:@"AddToCart"]) {
+    return [[TikTokAddToCartEvent alloc] initWithEventId:eventId];
+  }
+  if ([name isEqualToString:@"AddToWishlist"]) {
+    return [[TikTokAddToWishlistEvent alloc] initWithEventId:eventId];
+  }
+  if ([name isEqualToString:@"Checkout"]) {
+    return [[TikTokCheckoutEvent alloc] initWithEventId:eventId];
+  }
+  if ([name isEqualToString:@"Purchase"]) {
+    return [[TikTokPurchaseEvent alloc] initWithEventId:eventId];
+  }
+  if ([name isEqualToString:@"ViewContent"]) {
+    return [[TikTokViewContentEvent alloc] initWithEventId:eventId];
+  }
+
+  return nil;
+}
+
++ (NSArray<TikTokContentParams *> *)contentParamsArrayFromValue:(id)value {
+  if (![value isKindOfClass:[NSArray class]]) {
+    return @[];
+  }
+
+  NSMutableArray<TikTokContentParams *> *result = [NSMutableArray new];
+  for (id entry in (NSArray *)value) {
+    TikTokContentParams *content = [self contentParamsFromValue:entry];
+    if (content != nil) {
+      [result addObject:content];
+    }
+  }
+
+  return [result copy];
+}
+
++ (TikTokContentParams *_Nullable)contentParamsFromValue:(id)value {
+  if (![value isKindOfClass:[NSDictionary class]]) {
+    return nil;
+  }
+
+  NSDictionary *dictionary = (NSDictionary *)value;
+  TikTokContentParams *params = [TikTokContentParams new];
+
+  NSNumber *price = [self numberValue:dictionary[@"price"]];
+  if (price != nil) {
+    params.price = price;
+  }
+
+  NSNumber *quantity = [self numberValue:dictionary[@"quantity"]];
+  if (quantity != nil) {
+    params.quantity = quantity.integerValue;
+  }
+
+  NSString *contentId = [self normalizedString:dictionary[@"contentId"]];
+  if (contentId != nil) {
+    params.contentId = contentId;
+  }
+
+  NSString *contentCategory =
+      [self normalizedString:dictionary[@"contentCategory"]];
+  if (contentCategory != nil) {
+    params.contentCategory = contentCategory;
+  }
+
+  NSString *contentName = [self normalizedString:dictionary[@"contentName"]];
+  if (contentName != nil) {
+    params.contentName = contentName;
+  }
+
+  NSString *brand = [self normalizedString:dictionary[@"brand"]];
+  if (brand != nil) {
+    params.brand = brand;
+  }
+
+  return params;
 }
 
 + (void)applyBooleanOption:(NSString *)key

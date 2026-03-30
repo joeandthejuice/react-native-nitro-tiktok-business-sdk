@@ -28,6 +28,31 @@ export interface TikTokIdentity {
   email?: string;
 }
 
+export interface TikTokContent {
+  contentId?: string;
+  contentCategory?: string;
+  contentName?: string;
+  brand?: string;
+  price?: number;
+  quantity?: number;
+}
+
+export interface TikTokContentEventProperties {
+  contentType?: string;
+  contentId?: string;
+  description?: string;
+  currency?: string;
+  value?: number;
+  orderId?: string;
+  contents?: TikTokContent[];
+}
+
+export interface TikTokContentEvent {
+  name: string;
+  eventId?: string;
+  properties?: TikTokContentEventProperties;
+}
+
 export interface TikTokEvent {
   name: string;
   eventId?: string;
@@ -42,5 +67,6 @@ export interface TikTokAppEvents
   logout(): void;
   flush(): void;
   trackEvent(event: TikTokEvent): void;
+  trackContentEvent(event: TikTokContentEvent): void;
   fetchDeferredDeepLink(): Promise<string | undefined>;
 }

@@ -17,6 +17,9 @@ typedef void (^TikTokAppEventsDeferredDeepLinkCompletion)(NSString *_Nullable ur
 + (void)trackEventWithName:(NSString *)name
                 properties:(NSDictionary<NSString *, id> *)properties
                    eventId:(nullable NSString *)eventId;
++ (void)trackContentEventWithName:(NSString *)name
+                       properties:(NSDictionary<NSString *, id> *)properties
+                          eventId:(nullable NSString *)eventId;
 + (void)fetchDeferredDeepLinkWithCompletion:
     (TikTokAppEventsDeferredDeepLinkCompletion)completion;
 

@@ -1,4 +1,8 @@
-import { TikTokAppEventsModule, TikTokStandardEventNames } from '../index';
+import {
+  TikTokAppEventsModule,
+  TikTokContentEventNames,
+  TikTokStandardEventNames,
+} from '../index';
 import { mockCreateHybridObject, mockNativeModule } from './setup';
 
 describe('TikTokAppEventsModule', () => {
@@ -22,7 +26,7 @@ describe('TikTokAppEventsModule', () => {
     mockNativeModule.initialize.mockResolvedValue(undefined);
 
     await TikTokAppEventsModule.initialize({
-      accessToken: 'token',
+      accessToken: ' token ',
       appId: ' com.example.app ',
       tikTokAppId: '11, 22,33',
       trackingEnabled: false,
@@ -54,14 +58,15 @@ describe('TikTokAppEventsModule', () => {
     });
   });
 
-  it('routes helper methods through the generic trackEvent native call', () => {
+  it('routes standard, custom, and ad-revenue helpers through generic trackEvent', () => {
     TikTokAppEventsModule.trackStandardEvent(
       TikTokStandardEventNames.Registration,
       { source: 'example' },
       ' evt-1 '
     );
     TikTokAppEventsModule.trackCustomEvent(' Custom Event ', {
-      nested: { ok: true },
+      nested: { ok: true, ignored: undefined },
+      steps: [1, 2],
     });
     TikTokAppEventsModule.trackAdRevenueEvent(
       { revenue: 1.25, currency: 'USD' },
@@ -76,12 +81,58 @@ describe('TikTokAppEventsModule', () => {
     expect(mockNativeModule.trackEvent).toHaveBeenNthCalledWith(2, {
       name: 'Custom Event',
       eventId: undefined,
-      properties: { nested: { ok: true } },
+      properties: {
+        nested: { ok: true },
+        steps: [1, 2],
+      },
     });
     expect(mockNativeModule.trackEvent).toHaveBeenNthCalledWith(3, {
       name: TikTokStandardEventNames.ImpressionLevelAdRevenue,
       eventId: 'ad-1',
       properties: { revenue: 1.25, currency: 'USD' },
+    });
+  });
+
+  it('routes typed content helpers through native trackContentEvent', () => {
+    TikTokAppEventsModule.trackContentEvent(
+      TikTokContentEventNames.Purchase,
+      {
+        currency: ' usd ',
+        value: 9.99,
+        orderId: ' order-1 ',
+        contentType: ' product ',
+        contents: [
+          {
+            contentId: ' sku-1 ',
+            contentName: ' Pro Monthly ',
+            price: 9.99,
+            quantity: 1,
+          },
+          {
+            contentId: '   ',
+          },
+        ],
+      },
+      ' purchase-evt-1 '
+    );
+
+    expect(mockNativeModule.trackContentEvent).toHaveBeenCalledWith({
+      name: TikTokContentEventNames.Purchase,
+      eventId: 'purchase-evt-1',
+      properties: {
+        currency: 'USD',
+        value: 9.99,
+        orderId: 'order-1',
+        contentType: 'product',
+        contents: [
+          {
+            contentId: 'sku-1',
+            contentName: 'Pro Monthly',
+            price: 9.99,
+            quantity: 1,
+          },
+        ],
+      },
     });
   });
 
@@ -102,12 +153,60 @@ describe('TikTokAppEventsModule', () => {
     }).toThrow('TikTok event name cannot be empty.');
   });
 
-  it('rejects empty TikTok App IDs during initialization normalization', async () => {
+  it('rejects invalid TikTok App IDs during initialization normalization', async () => {
     expect(() => {
       TikTokAppEventsModule.initialize({
         accessToken: 'token',
-        tikTokAppId: [],
+        tikTokAppId: '123,,456',
       });
-    }).toThrow('At least one TikTok App ID is required.');
+    }).toThrow(
+      'TikTok App IDs cannot contain empty entries, leading commas, trailing commas, or consecutive commas.'
+    );
+
+    expect(() => {
+      TikTokAppEventsModule.initialize({
+        accessToken: 'token',
+        tikTokAppId: ['123', 'abc'],
+      });
+    }).toThrow('TikTok App ID at index 1 must contain only digits.');
+  });
+
+  it('rejects unsupported generic property values before crossing the bridge', () => {
+    expect(() => {
+      TikTokAppEventsModule.trackCustomEvent('Invalid', {
+        nested: {
+          handler: (() => true) as unknown as never,
+        },
+      });
+    }).toThrow(
+      'properties.nested.handler must not contain functions, symbols, bigint values, or unsupported object types.'
+    );
+  });
+
+  it('rejects invalid content helper inputs before crossing the bridge', () => {
+    expect(() => {
+      TikTokAppEventsModule.trackContentEvent(
+        TikTokContentEventNames.Purchase,
+        {
+          currency: 'usdollars',
+        }
+      );
+    }).toThrow(
+      'TikTok content event currency must be a 3-letter ISO 4217 code.'
+    );
+
+    expect(() => {
+      TikTokAppEventsModule.trackContentEvent(
+        TikTokContentEventNames.Purchase,
+        {
+          contents: [
+            {
+              contentId: 'sku-1',
+              quantity: 1.5,
+            },
+          ],
+        }
+      );
+    }).toThrow('TikTok content quantity must be an integer.');
   });
 });

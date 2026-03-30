@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import {
   TikTokAppEventsModule,
+  TikTokContentEventNames,
   TikTokStandardEventNames,
 } from '@joejuice/react-native-nitro-tiktok-business-sdk';
 
@@ -129,19 +130,18 @@ export default function App() {
 
   function trackPurchase() {
     try {
-      TikTokAppEventsModule.trackStandardEvent(
-        TikTokStandardEventNames.Purchase,
+      TikTokAppEventsModule.trackContentEvent(
+        TikTokContentEventNames.Purchase,
         {
           currency: 'USD',
           value: 9.99,
-          description: 'Example subscription purchase',
-          content_id: 'example-pro-monthly',
-          content_type: 'subscription',
           contents: [
             {
               content_id: 'example-pro-monthly',
               content_name: 'Example Pro Monthly',
-              price: '9.99',
+              content_category: 'subscription',
+              content_category_name: 'membership',
+              price: 9.99,
               quantity: 1,
             },
           ],

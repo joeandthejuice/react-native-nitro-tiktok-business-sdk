@@ -86,6 +86,72 @@ NSDictionary<NSString *, id> *anyObjectToNSDictionary(const AnyObject &object) {
   return result;
 }
 
+NSDictionary<NSString *, id> *contentToNSDictionary(
+    const TikTokContent &content) {
+  NSMutableDictionary<NSString *, id> *result =
+      [[NSMutableDictionary alloc] init];
+
+  if (NSString *value = toNullableNSString(content.contentId)) {
+    result[@"contentId"] = value;
+  }
+  if (NSString *value = toNullableNSString(content.contentCategory)) {
+    result[@"contentCategory"] = value;
+  }
+  if (NSString *value = toNullableNSString(content.contentName)) {
+    result[@"contentName"] = value;
+  }
+  if (NSString *value = toNullableNSString(content.brand)) {
+    result[@"brand"] = value;
+  }
+  if (NSNumber *value = toNullableDoubleNumber(content.price)) {
+    result[@"price"] = value;
+  }
+  if (NSNumber *value = toNullableDoubleNumber(content.quantity)) {
+    result[@"quantity"] = value;
+  }
+
+  return result;
+}
+
+NSDictionary<NSString *, id> *contentEventPropertiesToNSDictionary(
+    const std::optional<TikTokContentEventProperties> &properties) {
+  if (!properties.has_value()) {
+    return @{};
+  }
+
+  NSMutableDictionary<NSString *, id> *result =
+      [[NSMutableDictionary alloc] init];
+
+  if (NSString *value = toNullableNSString(properties->contentType)) {
+    result[@"contentType"] = value;
+  }
+  if (NSString *value = toNullableNSString(properties->contentId)) {
+    result[@"contentId"] = value;
+  }
+  if (NSString *value = toNullableNSString(properties->description)) {
+    result[@"description"] = value;
+  }
+  if (NSString *value = toNullableNSString(properties->currency)) {
+    result[@"currency"] = value;
+  }
+  if (NSNumber *value = toNullableDoubleNumber(properties->value)) {
+    result[@"value"] = value;
+  }
+  if (NSString *value = toNullableNSString(properties->orderId)) {
+    result[@"orderId"] = value;
+  }
+  if (properties->contents.has_value()) {
+    NSMutableArray<NSDictionary<NSString *, id> *> *contents =
+        [[NSMutableArray alloc] initWithCapacity:properties->contents->size()];
+    for (const auto &content : *properties->contents) {
+      [contents addObject:contentToNSDictionary(content)];
+    }
+    result[@"contents"] = contents;
+  }
+
+  return result;
+}
+
 id anyValueToNSObject(const AnyValue &value) {
   return std::visit(
       [](const auto &typedValue) -> id {
@@ -266,6 +332,23 @@ void HybridTikTokAppEvents::trackEvent(const TikTokEvent &event) {
   [TikTokAppEventsIosFacade trackEventWithName:toNSString(*normalizedName)
                                     properties:properties
                                        eventId:eventId];
+}
+
+void HybridTikTokAppEvents::trackContentEvent(const TikTokContentEvent &event) {
+  auto normalizedName = normalizeString(std::optional<std::string>(event.name));
+  if (!normalizedName.has_value()) {
+    throw std::invalid_argument("TikTok content event name cannot be empty.");
+  }
+
+  NSString *eventId = nil;
+  if (auto normalizedEventId = normalizeString(event.eventId)) {
+    eventId = toNSString(*normalizedEventId);
+  }
+
+  [TikTokAppEventsIosFacade
+      trackContentEventWithName:toNSString(*normalizedName)
+                     properties:contentEventPropertiesToNSDictionary(event.properties)
+                        eventId:eventId];
 }
 
 std::shared_ptr<Promise<std::optional<std::string>>>

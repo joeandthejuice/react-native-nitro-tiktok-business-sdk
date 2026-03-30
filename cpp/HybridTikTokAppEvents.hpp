@@ -15,6 +15,7 @@ public:
   void logout() override;
   void flush() override;
   void trackEvent(const TikTokEvent& event) override;
+  void trackContentEvent(const TikTokContentEvent& event) override;
   std::shared_ptr<Promise<std::optional<std::string>>>
   fetchDeferredDeepLink() override;
 

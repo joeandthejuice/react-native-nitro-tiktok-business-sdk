@@ -12,6 +12,14 @@ import com.margelo.nitro.core.Promise
 import com.tiktok.TikTokBusinessSdk
 import com.tiktok.appevents.ErrorData
 import com.tiktok.appevents.base.TTBaseEvent
+import com.tiktok.appevents.contents.TTAddToCartEvent
+import com.tiktok.appevents.contents.TTAddToWishlistEvent
+import com.tiktok.appevents.contents.TTCheckoutEvent
+import com.tiktok.appevents.contents.TTContentParams
+import com.tiktok.appevents.contents.TTContentsEvent
+import com.tiktok.appevents.contents.TTContentsEventConstants
+import com.tiktok.appevents.contents.TTPurchaseEvent
+import com.tiktok.appevents.contents.TTViewContentEvent
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
@@ -178,6 +186,17 @@ class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
     }
   }
 
+  override fun trackContentEvent(event: TikTokContentEvent) {
+    val eventName = event.name.trim()
+    require(eventName.isNotEmpty()) { "TikTok content event name cannot be empty." }
+
+    val nativeEvent = buildContentEvent(eventName, event.properties, event.eventId.normalized())
+
+    mainHandler.post {
+      TikTokBusinessSdk.trackTTEvent(nativeEvent)
+    }
+  }
+
   override fun fetchDeferredDeepLink(): Promise<String?> {
     return Promise.async {
       withContext(Dispatchers.Main.immediate) {
@@ -268,6 +287,89 @@ class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
 
   private fun String?.normalizedEmail(): String? {
     return this.normalized()?.lowercase()
+  }
+
+  private fun buildContentEvent(
+    eventName: String,
+    properties: TikTokContentEventProperties?,
+    eventId: String?
+  ): TTBaseEvent {
+    val builder = contentEventBuilderForName(eventName, eventId)
+
+    properties?.contentType.normalized()?.let(builder::setContentType)
+    properties?.contentId.normalized()?.let(builder::setContentId)
+    properties?.description.normalized()?.let(builder::setDescription)
+    properties?.currency.normalizedCurrency()?.let(builder::setCurrency)
+    properties?.value?.let(builder::setValue)
+    properties?.orderId.normalized()?.let { orderId ->
+      builder.addProperty(
+        TTContentsEventConstants.Params.EVENT_PROPERTY_ORDER_ID,
+        orderId
+      )
+    }
+
+    val contents = properties?.contents
+      ?.map(::buildContentParams)
+      ?.toTypedArray()
+      .orEmpty()
+    if (contents.isNotEmpty()) {
+      builder.setContents(*contents)
+    }
+
+    return builder.build()
+  }
+
+  private fun contentEventBuilderForName(
+    eventName: String,
+    eventId: String?
+  ): TTContentsEvent.Builder {
+    return when (eventName) {
+      TTContentsEventConstants.ContentsEventName.EVENT_NAME_ADD_TO_CARD ->
+        TTAddToCartEvent.newBuilder(eventId)
+      TTContentsEventConstants.ContentsEventName.EVENT_NAME_ADD_TO_WISHLIST ->
+        TTAddToWishlistEvent.newBuilder(eventId)
+      TTContentsEventConstants.ContentsEventName.EVENT_NAME_CHECK_OUT ->
+        TTCheckoutEvent.newBuilder(eventId)
+      TTContentsEventConstants.ContentsEventName.EVENT_NAME_PURCHASE ->
+        TTPurchaseEvent.newBuilder(eventId)
+      TTContentsEventConstants.ContentsEventName.EVENT_NAME_VIEW_CONTENT ->
+        TTViewContentEvent.newBuilder(eventId)
+      else -> throw IllegalArgumentException(
+        "Unsupported TikTok content event name: $eventName"
+      )
+    }
+  }
+
+  private fun buildContentParams(content: TikTokContent): TTContentParams {
+    val builder = TTContentParams.newBuilder()
+
+    content.contentId.normalized()?.let(builder::setContentId)
+    content.contentCategory.normalized()?.let(builder::setContentCategory)
+    content.contentName.normalized()?.let(builder::setContentName)
+    content.brand.normalized()?.let(builder::setBrand)
+    content.price?.let { price ->
+      builder.setPrice(price.toFloat())
+    }
+    content.quantity?.let { quantity ->
+      require(quantity % 1.0 == 0.0) {
+        "TikTok content quantity must be an integer."
+      }
+      builder.setQuantity(quantity.toInt())
+    }
+
+    return builder.build()
+  }
+
+  private fun String?.normalizedCurrency(): TTContentsEventConstants.Currency? {
+    val normalized = this.normalized()?.uppercase() ?: return null
+
+    return try {
+      enumValueOf<TTContentsEventConstants.Currency>(normalized)
+    } catch (_: IllegalArgumentException) {
+      throw IllegalArgumentException(
+        "Unsupported TikTok content event currency code: $normalized"
+      )
+    }
   }
 
   private fun resolveAppId(

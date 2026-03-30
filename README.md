@@ -14,7 +14,8 @@ This package focuses on TikTok App Events. It provides a small typed API for SDK
 - Built with [Nitro Modules](https://nitro.margelo.com/) for a small typed native bridge.
 - Supports Expo config plugin defaults for stable native App ID / TikTok App ID setup.
 - Keeps `accessToken` runtime-only by design.
-- Supports nested event payloads through Nitro `AnyMap`.
+- Exposes a typed content-event API for commerce events such as add-to-cart and purchase.
+- Keeps the generic event API for custom or unsupported payloads.
 - Exposes consent-gated initialization via `initialize({ trackingEnabled: false })` and `startTracking()`.
 - Includes an Expo example app for iOS and Android validation.
 
@@ -33,7 +34,7 @@ SemVer in this repo applies to the documented App Events API exposed by this pac
 - Expo: tested with SDK `54`
 - iOS: minimum target follows `min_ios_version_supported` from the installed React Native toolchain
 - Android: `minSdk 23`, `targetSdk 36`, `compileSdk 36`
-- Nitro runtime: `react-native-nitro-modules ^0.35.2`
+- Nitro runtime: `react-native-nitro-modules >=0.35.0 <1.0.0`
 
 ## Installation
 
@@ -70,21 +71,21 @@ plugins: [
       iosTikTokAppIds: ['1234567890123456789'],
       androidTikTokAppIds: ['9876543210987654321'],
       iosUserTrackingUsageDescription:
-        'This identifier will be used to deliver personalized ads to you.'
-    }
-  ]
-]
+        'This identifier will be used to deliver personalized ads to you.',
+    },
+  ],
+];
 ```
 
 ### Plugin options
 
-| Option | Platform | Required | Purpose |
-| --- | --- | --- | --- |
-| `iosAppId` | iOS | no | Writes the default iOS App Store ID into `Info.plist`. |
-| `iosTikTokAppIds` | iOS | no | Writes one or more default TikTok App IDs into `Info.plist`. |
-| `androidTikTokAppIds` | Android | no | Writes one or more default TikTok App IDs into the Android manifest. |
-| `androidAppId` | Android | no | Overrides the default Android package-name behavior when needed. |
-| `iosUserTrackingUsageDescription` | iOS | no | Sets `NSUserTrackingUsageDescription` if your app does not already define it. |
+| Option                            | Platform | Required | Purpose                                                                       |
+| --------------------------------- | -------- | -------- | ----------------------------------------------------------------------------- |
+| `iosAppId`                        | iOS      | no       | Writes the default iOS App Store ID into `Info.plist`.                        |
+| `iosTikTokAppIds`                 | iOS      | no       | Writes one or more default TikTok App IDs into `Info.plist`.                  |
+| `androidTikTokAppIds`             | Android  | no       | Writes one or more default TikTok App IDs into the Android manifest.          |
+| `androidAppId`                    | Android  | no       | Overrides the default Android package-name behavior when needed.              |
+| `iosUserTrackingUsageDescription` | iOS      | no       | Sets `NSUserTrackingUsageDescription` if your app does not already define it. |
 
 ### What the plugin configures
 
@@ -122,64 +123,60 @@ cd ios && pod install
 ```ts
 import {
   TikTokAppEventsModule,
+  TikTokContentEventNames,
   TikTokStandardEventNames,
-} from '@joejuice/react-native-nitro-tiktok-business-sdk'
+} from '@joejuice/react-native-nitro-tiktok-business-sdk';
 
 await TikTokAppEventsModule.initialize({
   accessToken: 'YOUR_ACCESS_TOKEN',
   trackingEnabled: false,
   logLevel: __DEV__ ? 'debug' : 'none',
-})
+});
 
 TikTokAppEventsModule.identify({
   externalId: 'user-123',
   externalUserName: 'marc',
   email: 'marc@example.com',
-})
+});
 
-TikTokAppEventsModule.startTracking()
+TikTokAppEventsModule.startTracking();
 
-TikTokAppEventsModule.trackStandardEvent(
-  TikTokStandardEventNames.Registration
-)
+TikTokAppEventsModule.trackStandardEvent(TikTokStandardEventNames.Registration);
 
-TikTokAppEventsModule.trackStandardEvent(
-  TikTokStandardEventNames.Purchase,
-  {
-    currency: 'USD',
-    value: 9.99,
-    content_id: 'pro-monthly',
-    content_type: 'subscription',
-    contents: [
-      {
-        content_id: 'pro-monthly',
-        content_name: 'Pro Monthly',
-        price: '9.99',
-        quantity: 1,
-      },
-    ],
-  },
-  'purchase-evt-001'
-)
+TikTokAppEventsModule.trackContentEvent(TikTokContentEventNames.Purchase, {
+  currency: 'usd',
+  value: 9.99,
+  orderId: 'purchase-evt-001',
+  contentType: 'subscription',
+  contents: [
+    {
+      contentId: 'pro-monthly',
+      contentName: 'Pro Monthly',
+      price: 9.99,
+      quantity: 1,
+    },
+  ],
+});
 
-const deferredUrl = await TikTokAppEventsModule.fetchDeferredDeepLink()
+const deferredUrl = await TikTokAppEventsModule.fetchDeferredDeepLink();
 
-TikTokAppEventsModule.flush()
+TikTokAppEventsModule.flush();
 ```
 
 ## API Overview
 
-| API | Description |
-| --- | --- |
-| `initialize(options)` | Initializes the TikTok SDK. `accessToken` is always required at runtime. |
-| `startTracking()` | Starts tracking after consent when initialized with tracking disabled. |
-| `identify(identity)` | Sends advanced matching identity fields. |
-| `logout()` | Clears advanced matching identity data. |
-| `trackEvent(event)` | Tracks a generic event payload. |
-| `trackStandardEvent(name, properties?, eventId?)` | Tracks a standard TikTok event. |
-| `trackCustomEvent(name, properties?, eventId?)` | Tracks a custom event. |
-| `flush()` | Forces a manual event flush. Useful for integration testing. |
-| `fetchDeferredDeepLink()` | Requests a deferred deep link after initialization. |
+| API                                               | Description                                                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------ |
+| `initialize(options)`                             | Initializes the TikTok SDK. `accessToken` is always required at runtime. |
+| `startTracking()`                                 | Starts tracking after consent when initialized with tracking disabled.   |
+| `identify(identity)`                              | Sends advanced matching identity fields.                                 |
+| `logout()`                                        | Clears advanced matching identity data.                                  |
+| `trackEvent(event)`                               | Tracks a generic event payload.                                          |
+| `trackStandardEvent(name, properties?, eventId?)` | Tracks a standard TikTok event.                                          |
+| `trackContentEvent(name, properties?, eventId?)`  | Tracks typed content/commerce events such as purchase or view-content.   |
+| `trackCustomEvent(name, properties?, eventId?)`   | Tracks a custom event.                                                   |
+| `flush()`                                         | Forces a manual event flush. Useful for integration testing.             |
+| `fetchDeferredDeepLink()`                         | Requests a deferred deep link after initialization.                      |
 
 ### `initialize(options)`
 
@@ -191,6 +188,45 @@ Initialization supports plugin defaults and runtime overrides:
   - Android should use the application package name.
 - `tikTokAppId` is optional when platform defaults are configured in the Expo plugin.
 - Runtime values override plugin defaults.
+
+### `trackContentEvent(name, properties?, eventId?)`
+
+Use `trackContentEvent()` for TikTok's commerce/content events:
+
+- `AddToCart`
+- `AddToWishlist`
+- `Checkout`
+- `Purchase`
+- `ViewContent`
+
+The helper intentionally uses a typed camelCase shape and maps it to the native TikTok content-event builders on both platforms.
+
+Supported content-event properties:
+
+- `contentType`
+- `contentId`
+- `description`
+- `currency`
+- `value`
+- `orderId`
+- `contents`
+
+Each `contents` item supports:
+
+- `contentId`
+- `contentCategory`
+- `contentName`
+- `brand`
+- `price`
+- `quantity`
+
+`currency` is normalized to uppercase and must be a 3-letter ISO 4217 code. `quantity` must be an integer.
+
+### Generic event properties
+
+`trackEvent()`, `trackStandardEvent()`, `trackCustomEvent()`, and `trackAdRevenueEvent()` accept JSON-like property maps.
+
+The wrapper removes `undefined` keys before crossing the bridge and rejects unsupported values such as functions, symbols, bigint values, and non-plain objects.
 
 ## Example App
 

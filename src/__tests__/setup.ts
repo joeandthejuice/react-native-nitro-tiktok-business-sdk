@@ -5,6 +5,7 @@ const mockNativeModule = {
   logout: jest.fn(),
   flush: jest.fn(),
   trackEvent: jest.fn(),
+  trackContentEvent: jest.fn(),
   fetchDeferredDeepLink: jest.fn(),
 };
 
