@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.3](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.2...v1.0.3) (2026-03-30)
+
+
+### Bug Fixes
+
+* use npm 11 for trusted publishing ([a76d6e5](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/a76d6e5a48b8671220532c8c2d16d80a0668a937))
+
 ## [1.0.2](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.1...v1.0.2) (2026-03-30)
 
 
