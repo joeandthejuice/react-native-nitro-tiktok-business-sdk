@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.1.0](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.3...v1.1.0) (2026-03-30)
+
+
+### Features
+
+* add typed TikTok content event helpers ([53e205a](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/53e205a3887ad76f8f23489eef7d6e9b6996ea96))
+
+
+### Bug Fixes
+
+* align example content event payload shape ([c98161e](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/c98161e16686f23af6f4aa4af3e5e6987b6c6916))
+
 ## [1.0.3](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.2...v1.0.3) (2026-03-30)
 
 
