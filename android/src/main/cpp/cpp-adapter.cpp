@@ -1,6 +1,9 @@
 #include <jni.h>
-#include "tiktokappeventsOnLoad.hpp"
+#include <fbjni/fbjni.h>
+#include "NitroTikTokAppEventsOnLoad.hpp"
 
 JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void*) {
-  return margelo::nitro::tiktokappevents::initialize(vm);
+  return facebook::jni::initialize(vm, []() {
+    margelo::nitro::tiktokappevents::registerAllNatives();
+  });
 }

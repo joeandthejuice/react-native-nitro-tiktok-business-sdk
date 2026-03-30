@@ -1,28 +1,12 @@
 buildscript {
-  ext.TiktokAppEvents = [
-    kotlinVersion: "2.0.21",
-    minSdkVersion: 24,
-    compileSdkVersion: 36,
-    targetSdkVersion: 36
-  ]
-
-  ext.getExtOrDefault = { prop ->
-    if (rootProject.ext.has(prop)) {
-      return rootProject.ext.get(prop)
-    }
-
-    return TiktokAppEvents[prop]
-  }
-
   repositories {
     google()
     mavenCentral()
+    maven { url 'https://www.jitpack.io' }
   }
 
   dependencies {
-    classpath "com.android.tools.build:gradle:8.7.2"
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion')}"
+    classpath "com.android.tools.build:gradle:8.13.1"
   }
 }
 
@@ -31,24 +15,42 @@ def reactNativeArchitectures() {
   return value ? value.split(",") : ["armeabi-v7a", "x86", "x86_64", "arm64-v8a"]
 }
 
-apply plugin: "com.android.library"
-apply plugin: "kotlin-android"
-apply from: '../nitrogen/generated/android/tiktokappevents+autolinking.gradle'
+def isNewArchitectureEnabled() {
+  return rootProject.hasProperty("newArchEnabled") && rootProject.getProperty("newArchEnabled") == "true"
+}
 
-apply plugin: "com.facebook.react"
+apply plugin: "com.android.library"
+apply plugin: "org.jetbrains.kotlin.android"
+apply from: "../nitrogen/generated/android/NitroTikTokAppEvents+autolinking.gradle"
+apply from: "./fix-prefab.gradle"
+
+if (isNewArchitectureEnabled()) {
+  apply plugin: "com.facebook.react"
+}
+
+def getExtOrDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties["NitroTikTokAppEvents_" + name]
+}
+
+def getExtOrIntegerDefault(name) {
+  return rootProject.ext.has(name) ? rootProject.ext.get(name) : (project.properties["NitroTikTokAppEvents_" + name]).toInteger()
+}
 
 android {
   namespace "com.margelo.nitro.tiktokappevents"
 
-  compileSdkVersion getExtOrDefault("compileSdkVersion")
+  ndkVersion getExtOrDefault("ndkVersion")
+  compileSdkVersion getExtOrIntegerDefault("compileSdkVersion")
 
   defaultConfig {
-    minSdkVersion getExtOrDefault("minSdkVersion")
-    targetSdkVersion getExtOrDefault("targetSdkVersion")
+    minSdkVersion getExtOrIntegerDefault("minSdkVersion")
+    targetSdkVersion getExtOrIntegerDefault("targetSdkVersion")
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+    consumerProguardFiles "consumer-rules.pro"
 
     externalNativeBuild {
       cmake {
-        cppFlags "-frtti -fexceptions -Wall -fstack-protector-all"
+        cppFlags "-frtti -fexceptions -Wall -Wextra -fstack-protector-all"
         arguments "-DANDROID_STL=c++_shared", "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
         abiFilters (*reactNativeArchitectures())
 
@@ -75,6 +77,7 @@ android {
       "META-INF",
       "META-INF/**",
       "**/libc++_shared.so",
+      "**/libNitroModules.so",
       "**/libfbjni.so",
       "**/libjsi.so",
       "**/libfolly_json.so",
@@ -102,7 +105,7 @@ android {
     }
   }
 
-  lint {
+  lintOptions {
     disable "GradleCompatible"
   }
 
@@ -110,9 +113,29 @@ android {
     sourceCompatibility JavaVersion.VERSION_1_8
     targetCompatibility JavaVersion.VERSION_1_8
   }
+
+  sourceSets {
+    main {
+      if (isNewArchitectureEnabled()) {
+        java.srcDirs += [
+          "${project.buildDir}/generated/source/codegen/java"
+        ]
+      }
+    }
+  }
+}
+
+repositories {
+  google()
+  mavenCentral()
+  maven { url 'https://www.jitpack.io' }
 }
 
 dependencies {
-  implementation "com.facebook.react:react-android"
+  implementation "com.facebook.react:react-native:+"
   implementation project(":react-native-nitro-modules")
+  implementation "com.github.tiktok:tiktok-business-android-sdk:1.6.0"
+  implementation "androidx.lifecycle:lifecycle-process:2.3.1"
+  implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
+  implementation "com.android.installreferrer:installreferrer:2.2"
 }

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "TiktokAppEvents Example",
-    "slug": "react-native-tiktok-app-events-example",
+    "name": "TikTok Business SDK Example",
+    "slug": "react-native-nitro-tiktok-business-sdk-example",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "tiktokappevents.example"
+      "bundleIdentifier": "com.joeandthejuice.reactnativenitrotiktokbusinesssdk.example"
     },
     "android": {
       "adaptiveIcon": {
@@ -22,8 +22,16 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "tiktokappevents.example"
+      "package": "com.joeandthejuice.reactnativenitrotiktokbusinesssdk.example"
     },
+    "plugins": [
+      [
+        "@joeandthejuice/react-native-nitro-tiktok-business-sdk",
+        {
+          "iosUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

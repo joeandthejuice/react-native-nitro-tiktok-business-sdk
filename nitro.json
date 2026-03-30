@@ -1,17 +1,32 @@
 {
-  "cxxNamespace": ["tiktokappevents"],
+  "$schema": "https://nitro.margelo.com/nitro.schema.json",
+  "cxxNamespace": [
+    "tiktokappevents"
+  ],
   "ios": {
-    "iosModuleName": "TiktokAppEvents"
+    "iosModuleName": "NitroTikTokAppEvents"
   },
   "android": {
-    "androidNamespace": ["tiktokappevents"],
-    "androidCxxLibName": "tiktokappevents"
+    "androidNamespace": [
+      "tiktokappevents"
+    ],
+    "androidCxxLibName": "NitroTikTokAppEvents"
   },
   "autolinking": {
-    "TiktokAppEvents": {
-      "swift": "TiktokAppEvents",
-      "kotlin": "TiktokAppEvents"
+    "TikTokAppEvents": {
+      "ios": {
+        "language": "c++",
+        "implementationClassName": "HybridTikTokAppEvents"
+      },
+      "android": {
+        "language": "kotlin",
+        "implementationClassName": "HybridTikTokAppEvents"
+      }
     }
   },
-  "ignorePaths": ["node_modules"]
+  "ignorePaths": [
+    "**/node_modules",
+    "**/lib"
+  ],
+  "gitAttributesGeneratedFlag": false
 }

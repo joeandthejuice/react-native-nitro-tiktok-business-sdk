@@ -1,5 +1,5 @@
 {
-  "name": "react-native-tiktok-app-events-example",
+  "name": "react-native-nitro-tiktok-business-sdk-example",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -8,6 +8,7 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
+    "@joeandthejuice/react-native-nitro-tiktok-business-sdk": "workspace:*",
     "expo": "~54.0.33",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",
