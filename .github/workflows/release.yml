@@ -25,7 +25,6 @@ jobs:
         with:
           token: ${{ secrets.RELEASE_PLEASE_TOKEN }}
           release-type: node
-          package-name: "@joeandthejuice/react-native-nitro-tiktok-business-sdk"
 
       - name: Checkout
         if: ${{ steps.release.outputs.release_created }}
