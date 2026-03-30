@@ -41,6 +41,12 @@ jobs:
           node-version-file: .nvmrc
           registry-url: "https://registry.npmjs.org"
 
+      - name: Setup npm for trusted publishing
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          npm install -g npm@11
+          npm --version
+
       - name: Verify package contents
         if: ${{ steps.release.outputs.release_created }}
         run: |
