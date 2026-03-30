@@ -21,6 +21,13 @@ yarn
 
 > Since the project relies on Yarn workspaces, you cannot use [`npm`](https://github.com/npm/cli) for development without manually migrating.
 
+This repo uses [Lefthook](https://lefthook.dev/) for local Git hooks. After `yarn`, the hooks should be installed automatically by the package dependency lifecycle.
+
+Current hooks:
+
+- `pre-commit`: runs ESLint with `--fix` on staged JS/TS files and re-stages fixes
+- `pre-push`: runs `yarn typecheck` and `yarn test`
+
 This project uses Nitro Modules. If you're not familiar with how Nitro works, make sure to check the [Nitro Modules Docs](https://nitro.margelo.com/).
 
 You need to run [Nitrogen](https://nitro.margelo.com/docs/nitrogen) to generate the boilerplate code required for this project. The example app will not build without this step.
@@ -78,6 +85,12 @@ Make sure your code passes TypeScript:
 yarn typecheck
 ```
 
+Run the test suite:
+
+```sh
+yarn test
+```
+
 To check for linting errors, run the following:
 
 ```sh
@@ -98,10 +111,26 @@ The `package.json` file contains various scripts for common tasks:
 
 - `yarn`: setup project by installing dependencies.
 - `yarn typecheck`: type-check files with TypeScript.
+- `yarn test`: run the library test suite.
 - `yarn lint`: lint files with [ESLint](https://eslint.org/).
 - `yarn example start`: start the Metro server for the example app.
 - `yarn example android`: run the example app on Android.
 - `yarn example ios`: run the example app on iOS.
+
+### Versioning and releases
+
+This package uses SemVer for the documented App Events API surface only. The package name is broader than the current scope, so versioning should be interpreted as:
+
+- stable guarantees for the APIs documented in `README.md`
+- no implied support for unrelated TikTok Business products or SDK surfaces
+
+This repo uses [Release Please](https://github.com/googleapis/release-please) plus conventional commits for releases.
+
+- Use conventional commit prefixes such as `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, and `chore:`.
+- `feat:` and `fix:` commits are the main releasable units.
+- Use a `!` suffix or `BREAKING CHANGE:` footer for SemVer major changes.
+- Merges to `main` create or update a release PR with version and changelog changes.
+- Merging the release PR tags the release and publishes the package to npm.
 
 ### Sending a pull request
 
@@ -110,7 +139,10 @@ The `package.json` file contains various scripts for common tasks:
 When you're sending a pull request:
 
 - Prefer small pull requests focused on one change.
-- Verify that linters and tests are passing.
+- Prefer conventional commit prefixes such as `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, and `chore:`.
+- Verify that lint, typecheck, and tests are passing.
+- Do not bypass hooks unless you are debugging the hook setup itself.
+- Make sure the final squash commit message is release-friendly if the change should appear in release notes.
 - Review the documentation to make sure it looks good.
 - Follow the pull request template when opening a pull request.
 - For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.

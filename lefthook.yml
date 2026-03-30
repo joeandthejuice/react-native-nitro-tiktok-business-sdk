@@ -1,0 +1,13 @@
+pre-commit:
+  commands:
+    eslint:
+      glob: "*.{js,mjs,ts,tsx}"
+      run: yarn eslint --fix --max-warnings=0 {staged_files}
+      stage_fixed: true
+
+pre-push:
+  commands:
+    typecheck:
+      run: yarn typecheck
+    test:
+      run: yarn test

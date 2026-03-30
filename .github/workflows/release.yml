@@ -1,0 +1,54 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Prepare release PR or GitHub release
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          release-type: node
+          package-name: "@joeandthejuice/react-native-nitro-tiktok-business-sdk"
+
+      - name: Checkout
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/checkout@v6
+
+      - name: Setup
+        if: ${{ steps.release.outputs.release_created }}
+        uses: ./.github/actions/setup
+
+      - name: Setup Node.js for npm publish
+        if: ${{ steps.release.outputs.release_created }}
+        uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Verify package contents
+        if: ${{ steps.release.outputs.release_created }}
+        run: |
+          yarn prepare
+          npm pack --dry-run
+
+      - name: Publish to npm
+        if: ${{ steps.release.outputs.release_created }}
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

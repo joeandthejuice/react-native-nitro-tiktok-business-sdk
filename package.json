@@ -1,7 +1,7 @@
 {
   "name": "@joeandthejuice/react-native-nitro-tiktok-business-sdk",
   "version": "0.1.0",
-  "description": "Nitro-based React Native bridge for the TikTok Business App Events SDK.",
+  "description": "Nitro-based React Native bridge for the TikTok Business App Events SDK (App Events scope).",
   "main": "./lib/module/index.js",
   "react-native": "./src/index.ts",
   "source": "./src/index.ts",
@@ -26,6 +26,7 @@
     "nitro.json",
     "*.podspec",
     "app.plugin.js",
+    "CHANGELOG.md",
     "README.md",
     "react-native.config.js",
     "!ios/build",
@@ -53,6 +54,8 @@
     "expo",
     "nitro",
     "tiktok",
+    "tiktok-business",
+    "tiktok-business-sdk",
     "analytics",
     "app-events",
     "ios",
@@ -90,6 +93,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
     "jest": "^30.2.0",
+    "lefthook": "^2.1.4",
     "nitrogen": "^0.35.2",
     "prettier": "^2.8.8",
     "react": "19.1.0",
@@ -162,8 +166,7 @@
     "tools": [
       "eslint",
       "jest",
-      "lefthook",
-      "release-it"
+      "lefthook"
     ],
     "version": "0.57.2"
   }

@@ -11,6 +11,13 @@
 
 The Android combined TikTok App Events + Pangle SDK is not wired in this first version.
 
+## Stability And Versioning
+
+- SemVer in this repo applies to the documented App Events API exposed by this package.
+- A `1.x` release means the App Events surface is stable enough to consume as a real library, not that this package wraps every TikTok Business SDK capability.
+- TikTok Login Kit, OpenSDK flows, Pangle monetization, and other non-App-Events surfaces are out of scope unless documented here explicitly.
+- The first public release should be treated as `1.0.0`, not because the package is exhaustive, but because the App Events contract is stable and intentionally scoped.
+
 ## Example App
 
 This repo includes an Expo example app under `example/` that lets you:
@@ -206,3 +213,11 @@ Fetches a deferred deep link after SDK initialization.
 - This wrapper library is MIT-licensed.
 - TikTok's Android SDK repository is also published under MIT, but TikTok documents that use of the App Events SDK is additionally governed by the TikTok For Business Commercial Terms of Service and the TikTok Business Products (Data) Terms.
 - Do not treat the wrapper's MIT license as replacing TikTok's product terms for SDK usage or collected data.
+
+## Releases
+
+This repo uses conventional commits plus Release Please for release management.
+
+- Releasable changes on `main` open or update a release PR with version and changelog updates.
+- Merging the release PR creates the Git tag and GitHub release.
+- The release workflow then publishes the package to npm via GitHub Actions.

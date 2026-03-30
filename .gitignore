@@ -84,3 +84,6 @@ android/generated
 
 # React Native Nitro Modules
 nitrogen/
+
+# Lefthook local overrides
+lefthook-local.yml
