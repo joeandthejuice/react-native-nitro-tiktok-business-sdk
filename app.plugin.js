@@ -1,1 +1,1 @@
-module.exports = require('./plugin/withTikTokAppEvents')
+module.exports = require('./plugin/withTikTokAppEvents');

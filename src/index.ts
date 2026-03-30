@@ -1,11 +1,11 @@
-import type { AnyMap } from 'react-native-nitro-modules'
-import { NitroModules } from 'react-native-nitro-modules'
+import type { AnyMap } from 'react-native-nitro-modules';
+import { NitroModules } from 'react-native-nitro-modules';
 import type {
   TikTokAppEvents as NativeTikTokAppEvents,
   TikTokEvent,
   TikTokIdentity,
   TikTokInitializeOptions,
-} from './specs/TikTokAppEvents.nitro'
+} from './specs/TikTokAppEvents.nitro';
 
 export const TikTokStandardEventNames = {
   AchieveLevel: 'AchieveLevel',
@@ -33,39 +33,39 @@ export const TikTokStandardEventNames = {
   Subscribe: 'Subscribe',
   UnlockAchievement: 'UnlockAchievement',
   ViewContent: 'ViewContent',
-} as const
+} as const;
 
 export type TikTokStandardEventName =
-  (typeof TikTokStandardEventNames)[keyof typeof TikTokStandardEventNames]
+  (typeof TikTokStandardEventNames)[keyof typeof TikTokStandardEventNames];
 
 export interface InitializeTikTokAppEventsOptions
   extends Omit<TikTokInitializeOptions, 'tikTokAppIds'> {
-  tikTokAppId: string | string[]
+  tikTokAppId: string | string[];
 }
 
-let nativeModule: NativeTikTokAppEvents | undefined
+let nativeModule: NativeTikTokAppEvents | undefined;
 
 function getNativeModule(): NativeTikTokAppEvents {
   if (nativeModule == null) {
     nativeModule =
-      NitroModules.createHybridObject<NativeTikTokAppEvents>('TikTokAppEvents')
+      NitroModules.createHybridObject<NativeTikTokAppEvents>('TikTokAppEvents');
   }
 
-  return nativeModule
+  return nativeModule;
 }
 
 function normalizeString(value?: string): string | undefined {
   if (value == null) {
-    return undefined
+    return undefined;
   }
 
-  const trimmed = value.trim()
-  return trimmed.length > 0 ? trimmed : undefined
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
 }
 
 function normalizeEmail(value?: string): string | undefined {
-  const normalized = normalizeString(value)
-  return normalized?.toLowerCase()
+  const normalized = normalizeString(value);
+  return normalized?.toLowerCase();
 }
 
 function normalizeTikTokAppIds(value: string | string[]): string[] {
@@ -74,41 +74,41 @@ function normalizeTikTokAppIds(value: string | string[]): string[] {
     : value
         .split(',')
         .map((entry) => entry.trim())
-        .filter(Boolean)
+        .filter(Boolean);
 
-  const normalized = ids.map((entry) => entry.trim()).filter(Boolean)
+  const normalized = ids.map((entry) => entry.trim()).filter(Boolean);
   if (normalized.length === 0) {
-    throw new Error('At least one TikTok App ID is required.')
+    throw new Error('At least one TikTok App ID is required.');
   }
 
-  return normalized
+  return normalized;
 }
 
 function normalizeEvent(event: TikTokEvent): TikTokEvent {
-  const name = normalizeString(event.name)
+  const name = normalizeString(event.name);
   if (name == null) {
-    throw new Error('TikTok event name cannot be empty.')
+    throw new Error('TikTok event name cannot be empty.');
   }
 
   return {
     name,
     eventId: normalizeString(event.eventId),
     properties: event.properties,
-  }
+  };
 }
 
 export const TikTokAppEventsModule = {
   initialize(options: InitializeTikTokAppEventsOptions) {
-    const { tikTokAppId, ...rest } = options
+    const { tikTokAppId, ...rest } = options;
 
     return getNativeModule().initialize({
       ...rest,
       tikTokAppIds: normalizeTikTokAppIds(tikTokAppId),
-    })
+    });
   },
 
   startTracking() {
-    getNativeModule().startTracking()
+    getNativeModule().startTracking();
   },
 
   identify(identity: TikTokIdentity) {
@@ -117,15 +117,15 @@ export const TikTokAppEventsModule = {
       externalUserName: normalizeString(identity.externalUserName),
       phoneNumber: normalizeString(identity.phoneNumber),
       email: normalizeEmail(identity.email),
-    })
+    });
   },
 
   logout() {
-    getNativeModule().logout()
+    getNativeModule().logout();
   },
 
   trackEvent(event: TikTokEvent) {
-    getNativeModule().trackEvent(normalizeEvent(event))
+    getNativeModule().trackEvent(normalizeEvent(event));
   },
 
   trackStandardEvent(
@@ -137,7 +137,7 @@ export const TikTokAppEventsModule = {
       name,
       eventId: normalizeString(eventId),
       properties,
-    })
+    });
   },
 
   trackCustomEvent(name: string, properties?: AnyMap, eventId?: string) {
@@ -145,7 +145,7 @@ export const TikTokAppEventsModule = {
       name,
       eventId: normalizeString(eventId),
       properties,
-    })
+    });
   },
 
   trackAdRevenueEvent(adRevenue: AnyMap, eventId?: string) {
@@ -153,18 +153,18 @@ export const TikTokAppEventsModule = {
       name: TikTokStandardEventNames.ImpressionLevelAdRevenue,
       eventId: normalizeString(eventId),
       properties: adRevenue,
-    })
+    });
   },
 
   fetchDeferredDeepLink() {
-    return getNativeModule().fetchDeferredDeepLink()
+    return getNativeModule().fetchDeferredDeepLink();
   },
-}
+};
 
-export default TikTokAppEventsModule
+export default TikTokAppEventsModule;
 
 export type {
   TikTokEvent,
   TikTokIdentity,
   TikTokInitializeOptions,
-} from './specs/TikTokAppEvents.nitro'
+} from './specs/TikTokAppEvents.nitro';

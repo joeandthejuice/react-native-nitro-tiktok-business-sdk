@@ -35,7 +35,9 @@ export default function App() {
   ]);
 
   function appendLog(message: string) {
-    setLogs((current) => [`${nowLabel()}  ${message}`, ...current].slice(0, 16));
+    setLogs((current) =>
+      [`${nowLabel()}  ${message}`, ...current].slice(0, 16)
+    );
   }
 
   async function initialize(trackingEnabled: boolean) {
@@ -173,7 +175,9 @@ export default function App() {
 
     try {
       const url = await TikTokAppEventsModule.fetchDeferredDeepLink();
-      appendLog(url ? `Deferred deep link: ${url}` : 'No deferred deep link available.');
+      appendLog(
+        url ? `Deferred deep link: ${url}` : 'No deferred deep link available.'
+      );
     } catch (error) {
       appendLog(`Deferred deep link fetch failed: ${String(error)}`);
     }
@@ -267,10 +271,7 @@ export default function App() {
         </View>
 
         <View style={styles.buttonGrid}>
-          <DemoButton
-            label="Initialize SDK"
-            onPress={() => initialize(true)}
-          />
+          <DemoButton label="Initialize SDK" onPress={() => initialize(true)} />
           <DemoButton
             label="Initialize SDK (Delayed Tracking)"
             onPress={() => initialize(false)}
