@@ -1,72 +1,65 @@
 # @joejuice/react-native-nitro-tiktok-business-sdk
 
-`@joejuice/react-native-nitro-tiktok-business-sdk` is a Nitro Modules bridge for the TikTok Business App Events SDK on iOS and Android.
+[![npm version](https://img.shields.io/npm/v/%40joejuice%2Freact-native-nitro-tiktok-business-sdk?style=flat-square)](https://www.npmjs.com/package/@joejuice/react-native-nitro-tiktok-business-sdk)
+[![CI](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/actions/workflows/ci.yml)
+[![Release](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/actions/workflows/release.yml/badge.svg)](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/actions/workflows/release.yml)
+[![license](https://img.shields.io/npm/l/%40joejuice%2Freact-native-nitro-tiktok-business-sdk?style=flat-square)](./LICENSE)
+
+Nitro-based React Native bridge for the TikTok Business App Events SDK on iOS and Android.
+
+This package focuses on TikTok App Events. It provides a small typed API for SDK initialization, consent-gated tracking, advanced matching identity, standard/custom events, manual flushing, and deferred deep links.
+
+## Highlights
+
+- Built with [Nitro Modules](https://nitro.margelo.com/) for a small typed native bridge.
+- Supports Expo config plugin defaults for stable native App ID / TikTok App ID setup.
+- Keeps `accessToken` runtime-only by design.
+- Supports nested event payloads through Nitro `AnyMap`.
+- Exposes consent-gated initialization via `initialize({ trackingEnabled: false })` and `startTracking()`.
+- Includes an Expo example app for iOS and Android validation.
 
 ## Scope
 
-- Supports the standalone TikTok App Events SDK.
-- The current surface area is App Events only, despite the broader package name.
-- Exposes a small cross-platform JS API for initialization, consent-gated tracking, identity, event tracking, manual flushes, and deferred deep links.
-- Uses Nitro `AnyMap` payloads so event properties can contain nested objects and arrays without stringifying JSON.
+This package does not try to cover every TikTok Business surface.
 
-The Android combined TikTok App Events + Pangle SDK is not wired in this first version.
+- Included: TikTok App Events SDK integration.
+- Not included: TikTok Login Kit, OpenSDK auth flows, Pangle monetization, or other unrelated TikTok Business products.
 
-## Stability And Versioning
+SemVer in this repo applies to the documented App Events API exposed by this package.
 
-- SemVer in this repo applies to the documented App Events API exposed by this package.
-- A `1.x` release means the App Events surface is stable enough to consume as a real library, not that this package wraps every TikTok Business SDK capability.
-- TikTok Login Kit, OpenSDK flows, Pangle monetization, and other non-App-Events surfaces are out of scope unless documented here explicitly.
-- The first public release should be treated as `1.0.0`, not because the package is exhaustive, but because the App Events contract is stable and intentionally scoped.
+## Requirements
 
-## Example App
+- React Native: tested with `0.81.5`
+- Expo: tested with SDK `54`
+- iOS: minimum target follows `min_ios_version_supported` from the installed React Native toolchain
+- Android: `minSdk 23`, `targetSdk 36`, `compileSdk 36`
+- Nitro runtime: `react-native-nitro-modules ^0.35.2`
 
-This repo includes an Expo example app under `example/` that lets you:
+## Installation
 
-- initialize the SDK with your own access token, app ID, and TikTok App ID
-- start tracking after consent
-- identify and logout test users
-- trigger standard events, custom events, and deferred deep link fetches
-
-Run it with:
-
-```sh
-yarn
-yarn example start
-```
-
-The example app exposes two init flows:
-
-- `Initialize SDK` for the normal tracking-enabled path
-- `Initialize SDK (Delayed Tracking)` for consent-gated testing
-
-### iOS delayed-tracking caveat
-
-TikTok's iOS SDK treats `disableTracking()` as "not initialized" even after it has otherwise configured itself. This repo normalizes that init callback so delayed-tracking init does not surface as a false failure, but TikTok still keeps its internal `initialized` flag false on iOS in that mode. As a result:
-
-- event tracking works after `startTracking()`
-- deferred deep links remain unavailable on iOS if the SDK was initialized with tracking disabled
-
-If you need to test deferred deep links on iOS, initialize with tracking enabled.
-
-## Install
-
-Install the library and Nitro runtime:
+Install the package and Nitro runtime:
 
 ```sh
 yarn add @joejuice/react-native-nitro-tiktok-business-sdk react-native-nitro-modules
 ```
 
-You will also need your TikTok Events Manager credentials:
+or:
 
-- `accessToken`: your TikTok App Secret
-- `appId`: Android package name or iOS App Store ID
-- `tikTokAppId`: your TikTok App ID from Events Manager
+```sh
+npm install @joejuice/react-native-nitro-tiktok-business-sdk react-native-nitro-modules
+```
 
-`accessToken` remains a runtime value in this library. `appId` and `tikTokAppId` can either be passed at runtime or configured as native defaults through the Expo plugin.
+You also need TikTok Events Manager credentials:
 
-### Expo / prebuild projects
+- `accessToken`: TikTok App Secret
+- `appId`: iOS App Store ID or Android package name
+- `tikTokAppId`: TikTok App ID from Events Manager
 
-Add the package and plugin:
+`accessToken` stays runtime-only in this library. `appId` and `tikTokAppId` can be provided either at runtime or as native defaults through the Expo plugin.
+
+## Expo Config Plugin
+
+Add the plugin in `app.config.ts` or `app.json`:
 
 ```ts
 plugins: [
@@ -83,32 +76,48 @@ plugins: [
 ]
 ```
 
-The plugin ensures:
+### Plugin options
 
-- the JitPack repository is present for Android
-- `use_modular_headers!` is added to the iOS Podfile so `TikTokBusinessSDK` can be imported in the iOS bridge target
-- `NSUserTrackingUsageDescription` can be set when needed
-- iOS build-time defaults for `appId` and `tikTokAppId(s)` can be written into `Info.plist`
-- Android build-time defaults for `tikTokAppId(s)` and optional `appId` overrides can be written into the app manifest
+| Option | Platform | Required | Purpose |
+| --- | --- | --- | --- |
+| `iosAppId` | iOS | no | Writes the default iOS App Store ID into `Info.plist`. |
+| `iosTikTokAppIds` | iOS | no | Writes one or more default TikTok App IDs into `Info.plist`. |
+| `androidTikTokAppIds` | Android | no | Writes one or more default TikTok App IDs into the Android manifest. |
+| `androidAppId` | Android | no | Overrides the default Android package-name behavior when needed. |
+| `iosUserTrackingUsageDescription` | iOS | no | Sets `NSUserTrackingUsageDescription` if your app does not already define it. |
+
+### What the plugin configures
+
+- adds JitPack to Android repositories when needed
+- adds `use_modular_headers!` to the iOS `Podfile` target when needed
+- writes iOS default `appId` and `tikTokAppId(s)` into `Info.plist`
+- writes Android default `tikTokAppId(s)` and optional `appId` into the manifest
+- optionally sets `NSUserTrackingUsageDescription`
 
 Recommended split:
 
-- configure `iosAppId`, `iosTikTokAppIds`, and `androidTikTokAppIds` in the plugin because they are usually stable per build profile
-- only set `androidAppId` in the plugin if you explicitly need to override the default package-name behavior
-- leave `accessToken` at runtime
-- use runtime `appId` or `tikTokAppId` only when you need to override the plugin defaults
+- configure `iosAppId`, `iosTikTokAppIds`, and `androidTikTokAppIds` in the plugin
+- only set `androidAppId` if you need to override the package-name default
+- keep `accessToken` at runtime
+- only pass runtime `appId` or `tikTokAppId` when you intentionally want to override plugin defaults
 
-Plugin changes require a rebuild or prebuild sync. Runtime initialization changes do not.
+Plugin changes require a rebuild or prebuild sync.
 
-### Bare React Native projects
+## Bare React Native Setup
+
+If you are not using Expo config plugins:
 
 1. Install `react-native-nitro-modules`.
 2. Install this package.
-3. Add JitPack to the root Android repositories if your project does not already include it.
-4. Add `use_modular_headers!` in your iOS Podfile target if it is not already present.
-5. Run `cd ios && pod install`.
+3. Add JitPack to your Android repositories if it is not already present.
+4. Add `use_modular_headers!` inside the relevant iOS `Podfile` target if it is not already present.
+5. Run:
 
-## Usage
+```sh
+cd ios && pod install
+```
+
+## Quick Start
 
 ```ts
 import {
@@ -146,9 +155,9 @@ TikTokAppEventsModule.trackStandardEvent(
         content_id: 'pro-monthly',
         content_name: 'Pro Monthly',
         price: '9.99',
-        quantity: 1
-      }
-    ]
+        quantity: 1,
+      },
+    ],
   },
   'purchase-evt-001'
 )
@@ -158,67 +167,87 @@ const deferredUrl = await TikTokAppEventsModule.fetchDeferredDeepLink()
 TikTokAppEventsModule.flush()
 ```
 
-## API
+## API Overview
+
+| API | Description |
+| --- | --- |
+| `initialize(options)` | Initializes the TikTok SDK. `accessToken` is always required at runtime. |
+| `startTracking()` | Starts tracking after consent when initialized with tracking disabled. |
+| `identify(identity)` | Sends advanced matching identity fields. |
+| `logout()` | Clears advanced matching identity data. |
+| `trackEvent(event)` | Tracks a generic event payload. |
+| `trackStandardEvent(name, properties?, eventId?)` | Tracks a standard TikTok event. |
+| `trackCustomEvent(name, properties?, eventId?)` | Tracks a custom event. |
+| `flush()` | Forces a manual event flush. Useful for integration testing. |
+| `fetchDeferredDeepLink()` | Requests a deferred deep link after initialization. |
 
 ### `initialize(options)`
 
-Initializes the TikTok SDK with your access token, app ID, and TikTok App ID(s).
+Initialization supports plugin defaults and runtime overrides:
 
-- `accessToken` is always required at runtime.
+- `accessToken` is always required.
 - `appId` is optional when:
   - iOS default `iosAppId` is configured in the Expo plugin, or
-  - Android should use the application package name
-- `tikTokAppId` is optional when platform defaults are configured in the Expo plugin
-- runtime values override plugin defaults when both are provided
+  - Android should use the application package name.
+- `tikTokAppId` is optional when platform defaults are configured in the Expo plugin.
+- Runtime values override plugin defaults.
 
-### `startTracking()`
+## Example App
 
-Controls consent-gated tracking. If initialized with tracking disabled, calling this later flushes queued events.
+The repo includes an Expo example app in [`example/`](./example) for validating the integration on iOS and Android.
 
-### `identify(identity)` / `logout()`
+Run it with:
 
-Wraps TikTok advanced matching identity calls.
-
-### `flush()`
-
-Forces the TikTok SDK to flush queued events immediately. This is mainly useful for integration testing and rare operational cases where you do not want to wait for the normal batch interval.
-
-### `trackEvent(event)`
-
-Tracks a standard or custom event using a generic payload:
-
-```ts
-{
-  name: 'Purchase',
-  eventId: 'purchase-1',
-  properties: {
-    currency: 'USD',
-    value: 9.99
-  }
-}
+```sh
+yarn
+yarn example start
 ```
 
-### `fetchDeferredDeepLink()`
+The example app includes flows for:
 
-Fetches a deferred deep link after SDK initialization.
+- standard initialization
+- delayed tracking initialization
+- advanced matching identify / logout
+- standard events
+- custom events
+- deferred deep links
+
+## Troubleshooting
+
+### iOS delayed-tracking caveat
+
+TikTok's iOS SDK treats `disableTracking()` as "not initialized" even after native configuration completes. This package normalizes that callback so delayed-tracking init does not surface as a false failure, but TikTok still keeps its internal `initialized` flag false on iOS in that mode.
+
+Practical effect:
+
+- event tracking works after `startTracking()`
+- deferred deep links remain unavailable on iOS if the SDK was initialized with tracking disabled
+
+If you need to validate deferred deep links on iOS, initialize with tracking enabled.
+
+### Android debug mode and flush logs
+
+`debugModeEnabled` is a TikTok SDK mode, not general logging. Leave it off for normal validation. On Android, TikTok can accept a batch request while still counting queued events as discarded when debug mode is enabled.
+
+Use `logLevel` for SDK log verbosity during integration testing.
+
+### Plugin changes do not apply over OTA updates
+
+Expo plugin changes affect native configuration. Rebuild or rerun prebuild when you change plugin values such as `iosAppId`, `androidTikTokAppIds`, or `iosUserTrackingUsageDescription`.
 
 ## Notes
 
-- `logLevel` controls SDK log verbosity.
-- `debugModeEnabled` is a separate TikTok SDK mode. Leave it off for normal integration validation. On Android, TikTok's SDK can post the batch request and still count queued events as discarded when debug mode is enabled.
-- Android automatic Google Play purchase tracking is not a focus of this package today. Manual purchase event tracking works, but Google Play Billing auto-IAP wiring is intentionally not included by default.
+- The Android combined TikTok App Events + Pangle SDK is not wired in this package.
+- Automatic Google Play Billing-based purchase detection is not included by default. Manual purchase event tracking works.
 
-## License And Compliance
+## Contributing
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for local development, validation, hooks, and release workflow details.
+
+## License and Compliance
 
 - This wrapper library is MIT-licensed.
-- TikTok's Android SDK repository is also published under MIT, but TikTok documents that use of the App Events SDK is additionally governed by the TikTok For Business Commercial Terms of Service and the TikTok Business Products (Data) Terms.
-- Do not treat the wrapper's MIT license as replacing TikTok's product terms for SDK usage or collected data.
+- TikTok's Android SDK repository is also published under MIT.
+- TikTok documents that SDK use is additionally governed by TikTok For Business commercial and data terms.
 
-## Releases
-
-This repo uses conventional commits plus Release Please for release management.
-
-- Releasable changes on `main` open or update a release PR with version and changelog updates.
-- Merging the release PR creates the Git tag and GitHub release.
-- The release workflow then publishes the package to npm via GitHub Actions.
-- Release Please must run with a repository secret such as `RELEASE_PLEASE_TOKEN`, not the default `GITHUB_TOKEN`, so CI workflows run on the generated release PR and the release tag can be created under repository rules.
+Do not treat the wrapper's MIT license as replacing TikTok's product terms for SDK usage or collected data.
