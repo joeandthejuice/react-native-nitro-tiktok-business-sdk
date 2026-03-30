@@ -135,12 +135,13 @@ export default function App() {
         {
           currency: 'USD',
           value: 9.99,
+          contentId: 'example-pro-monthly',
+          contentType: 'subscription',
           contents: [
             {
-              content_id: 'example-pro-monthly',
-              content_name: 'Example Pro Monthly',
-              content_category: 'subscription',
-              content_category_name: 'membership',
+              contentId: 'example-pro-monthly',
+              contentName: 'Example Pro Monthly',
+              contentCategory: 'subscription',
               price: 9.99,
               quantity: 1,
             },
