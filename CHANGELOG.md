@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.2](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.1...v1.0.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* refresh yarn lockfile ([ecf881e](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/ecf881eafaf7c6b6e7389db44b737a77b7ccdb8c))
+* relax nitro peer dependency ([f7187b7](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/f7187b7424087675a70244e2f51b0a561a5869a7))
+
 ## [1.0.1](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.0...v1.0.1) (2026-03-30)
 
 
