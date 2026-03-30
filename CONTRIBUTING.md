@@ -131,6 +131,7 @@ This repo uses [Release Please](https://github.com/googleapis/release-please) pl
 - Use a `!` suffix or `BREAKING CHANGE:` footer for SemVer major changes.
 - Merges to `main` create or update a release PR with version and changelog changes.
 - Merging the release PR tags the release and publishes the package to npm.
+- The Release Please workflow must use a repository secret like `RELEASE_PLEASE_TOKEN`; the default `GITHUB_TOKEN` is not sufficient because bot-created release PRs do not trigger the downstream CI checks required by this repo.
 
 ### Sending a pull request
 

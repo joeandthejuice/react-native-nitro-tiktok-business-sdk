@@ -221,3 +221,4 @@ This repo uses conventional commits plus Release Please for release management.
 - Releasable changes on `main` open or update a release PR with version and changelog updates.
 - Merging the release PR creates the Git tag and GitHub release.
 - The release workflow then publishes the package to npm via GitHub Actions.
+- Release Please must run with a repository secret such as `RELEASE_PLEASE_TOKEN`, not the default `GITHUB_TOKEN`, so CI workflows run on the generated release PR and the release tag can be created under repository rules.
