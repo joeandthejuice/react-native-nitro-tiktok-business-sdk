@@ -4,6 +4,9 @@
 
 static NSString *const TikTokAppEventsErrorDomain =
     @"com.joeandthejuice.react-native-nitro-tiktok-business-sdk";
+static NSString *const TikTokAppEventsInfoPlistAppIdKey = @"TikTokAppEventsAppId";
+static NSString *const TikTokAppEventsInfoPlistTikTokAppIdsKey =
+    @"TikTokAppEventsTikTokAppIds";
 static BOOL TikTokAppEventsSdkConfigured = NO;
 
 @implementation TikTokAppEventsIosFacade
@@ -21,17 +24,14 @@ static BOOL TikTokAppEventsSdkConfigured = NO;
     }
 
     NSString *accessToken = [self normalizedString:options[@"accessToken"]];
-    NSString *appId = [self normalizedString:options[@"appId"]];
-    NSArray<NSString *> *tikTokAppIds =
-        [options[@"tikTokAppIds"] isKindOfClass:[NSArray class]]
-            ? options[@"tikTokAppIds"]
-            : nil;
+    NSString *appId = [self resolvedAppIdFromOptions:options];
+    NSArray<NSString *> *tikTokAppIds = [self resolvedTikTokAppIdsFromOptions:options];
 
     if (accessToken == nil || appId == nil || tikTokAppIds.count == 0) {
       completion(
           NO,
           [self errorWithMessage:
-                    @"TikTok initialization requires accessToken, appId, and at least one TikTok App ID."]);
+                    @"TikTok initialization requires accessToken plus appId and at least one TikTok App ID, either from runtime options or native defaults configured by the Expo plugin."]);
       return;
     }
 
@@ -237,6 +237,59 @@ static BOOL TikTokAppEventsSdkConfigured = NO;
 + (NSString *_Nullable)normalizedEmail:(id)value {
   NSString *normalized = [self normalizedString:value];
   return normalized.lowercaseString;
+}
+
++ (NSString *_Nullable)resolvedAppIdFromOptions:
+    (NSDictionary<NSString *, id> *)options {
+  NSString *runtimeAppId = [self normalizedString:options[@"appId"]];
+  if (runtimeAppId != nil) {
+    return runtimeAppId;
+  }
+
+  return [self normalizedString:[[NSBundle mainBundle]
+                                    objectForInfoDictionaryKey:
+                                        TikTokAppEventsInfoPlistAppIdKey]];
+}
+
++ (NSArray<NSString *> *)resolvedTikTokAppIdsFromOptions:
+    (NSDictionary<NSString *, id> *)options {
+  NSArray<NSString *> *runtimeIds = [self normalizedTikTokAppIds:options[@"tikTokAppIds"]];
+  if (runtimeIds.count > 0) {
+    return runtimeIds;
+  }
+
+  id rawInfoPlistValue = [[NSBundle mainBundle]
+      objectForInfoDictionaryKey:TikTokAppEventsInfoPlistTikTokAppIdsKey];
+  return [self normalizedTikTokAppIds:rawInfoPlistValue];
+}
+
++ (NSArray<NSString *> *)normalizedTikTokAppIds:(id)value {
+  NSMutableArray<NSString *> *normalizedIds = [NSMutableArray new];
+
+  if ([value isKindOfClass:[NSArray class]]) {
+    for (id entry in (NSArray *)value) {
+      NSString *normalizedEntry = [self normalizedString:entry];
+      if (normalizedEntry != nil) {
+        [normalizedIds addObject:normalizedEntry];
+      }
+    }
+    return [normalizedIds copy];
+  }
+
+  NSString *normalizedStringValue = [self normalizedString:value];
+  if (normalizedStringValue == nil) {
+    return @[];
+  }
+
+  for (NSString *entry in
+       [normalizedStringValue componentsSeparatedByString:@","]) {
+    NSString *normalizedEntry = [self normalizedString:entry];
+    if (normalizedEntry != nil) {
+      [normalizedIds addObject:normalizedEntry];
+    }
+  }
+
+  return [normalizedIds copy];
 }
 
 + (NSNumber *_Nullable)numberValue:(id)value {

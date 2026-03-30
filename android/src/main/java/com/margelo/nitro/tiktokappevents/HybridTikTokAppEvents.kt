@@ -1,5 +1,7 @@
 package com.margelo.nitro.tiktokappevents
 
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import androidx.annotation.Keep
@@ -21,15 +23,18 @@ import kotlin.coroutines.suspendCoroutine
 @Keep
 @DoNotStrip
 class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
+  companion object {
+    private const val appIdMetaDataKey =
+      "com.joeandthejuice.react_native_nitro_tiktok_business_sdk.APP_ID"
+    private const val tikTokAppIdsMetaDataKey =
+      "com.joeandthejuice.react_native_nitro_tiktok_business_sdk.TIKTOK_APP_IDS"
+  }
+
   private val mainHandler = Handler(Looper.getMainLooper())
 
   override fun initialize(options: TikTokInitializeOptions): Promise<Unit> {
     if (TikTokBusinessSdk.isInitialized()) {
       return Promise.resolved(Unit)
-    }
-
-    if (options.tikTokAppIds.isEmpty()) {
-      return Promise.rejected(IllegalArgumentException("At least one TikTok App ID is required."))
     }
 
     return Promise.async {
@@ -43,9 +48,29 @@ class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
               return@suspendCoroutine
             }
 
-          val config = TikTokBusinessSdk.TTConfig(context, options.accessToken)
-            .setAppId(options.appId)
-            .setTTAppId(options.tikTokAppIds.joinToString(","))
+          val accessToken = options.accessToken.normalized()
+          if (accessToken == null) {
+            continuation.resumeWithException(
+              IllegalArgumentException("TikTok initialization requires a non-empty accessToken.")
+            )
+            return@suspendCoroutine
+          }
+
+          val resolvedAppId = resolveAppId(context, options.appId)
+          val resolvedTikTokAppIds = resolveTikTokAppIds(context, options.tikTokAppIds)
+
+          if (resolvedTikTokAppIds.isEmpty()) {
+            continuation.resumeWithException(
+              IllegalArgumentException(
+                "TikTok initialization requires at least one TikTok App ID, either from runtime options or Android manifest defaults configured by the Expo plugin."
+              )
+            )
+            return@suspendCoroutine
+          }
+
+          val config = TikTokBusinessSdk.TTConfig(context, accessToken)
+            .setAppId(resolvedAppId)
+            .setTTAppId(resolvedTikTokAppIds.joinToString(","))
 
           if (options.trackingEnabled == false) {
             config.disableAutoStart()
@@ -237,5 +262,46 @@ class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
 
   private fun String?.normalizedEmail(): String? {
     return this.normalized()?.lowercase()
+  }
+
+  private fun resolveAppId(
+    context: android.content.Context,
+    runtimeAppId: String?
+  ): String {
+    return runtimeAppId.normalized()
+      ?: readManifestMetaData(context, appIdMetaDataKey)
+      ?: context.packageName
+  }
+
+  private fun resolveTikTokAppIds(
+    context: android.content.Context,
+    runtimeTikTokAppIds: Array<String>?
+  ): List<String> {
+    val runtimeIds = runtimeTikTokAppIds.orEmpty().mapNotNull { it.normalized() }
+    if (runtimeIds.isNotEmpty()) {
+      return runtimeIds
+    }
+
+    return readManifestMetaData(context, tikTokAppIdsMetaDataKey)
+      ?.split(',')
+      ?.mapNotNull { it.normalized() }
+      .orEmpty()
+  }
+
+  private fun readManifestMetaData(
+    context: android.content.Context,
+    key: String
+  ): String? {
+    val applicationInfo = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      context.packageManager.getApplicationInfo(
+        context.packageName,
+        PackageManager.ApplicationInfoFlags.of(PackageManager.GET_META_DATA.toLong())
+      )
+    } else {
+      @Suppress("DEPRECATION")
+      context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+    }
+
+    return applicationInfo.metaData?.getString(key).normalized()
   }
 }

@@ -1,11 +1,67 @@
 const {
+  AndroidConfig,
   createRunOncePlugin,
+  withAndroidManifest,
   withDangerousMod,
   withInfoPlist,
 } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('../package.json');
+
+const IOS_APP_ID_KEY = 'TikTokAppEventsAppId';
+const IOS_TIKTOK_APP_IDS_KEY = 'TikTokAppEventsTikTokAppIds';
+const ANDROID_APP_ID_KEY =
+  'com.joeandthejuice.react_native_nitro_tiktok_business_sdk.APP_ID';
+const ANDROID_TIKTOK_APP_IDS_KEY =
+  'com.joeandthejuice.react_native_nitro_tiktok_business_sdk.TIKTOK_APP_IDS';
+
+function normalizeString(value) {
+  if (typeof value !== 'string') {
+    return undefined;
+  }
+
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : undefined;
+}
+
+function normalizeStringArray(value) {
+  if (Array.isArray(value)) {
+    return value.map((entry) => normalizeString(entry)).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .map((entry) => normalizeString(entry))
+      .filter(Boolean);
+  }
+
+  return [];
+}
+
+function setMetaDataItem(application, name, value) {
+  const metaData = application['meta-data'] ?? [];
+  const nextMetaData = metaData.filter(
+    (entry) => entry.$['android:name'] !== name
+  );
+
+  if (value != null) {
+    nextMetaData.push({
+      $: {
+        'android:name': name,
+        'android:value': value,
+      },
+    });
+  }
+
+  if (nextMetaData.length === 0) {
+    delete application['meta-data'];
+    return;
+  }
+
+  application['meta-data'] = nextMetaData;
+}
 
 function ensureJitPackRepository(contents) {
   if (contents.includes('jitpack.io')) {
@@ -85,24 +141,66 @@ function withIosModularHeaders(config) {
   ]);
 }
 
-function withOptionalTrackingUsageDescription(config, props) {
-  if (!props?.iosUserTrackingUsageDescription) {
-    return config;
-  }
-
+function withIosTikTokDefaults(config, props) {
   return withInfoPlist(config, (configWithInfoPlist) => {
-    if (!configWithInfoPlist.modResults.NSUserTrackingUsageDescription) {
+    if (
+      props?.iosUserTrackingUsageDescription &&
+      !configWithInfoPlist.modResults.NSUserTrackingUsageDescription
+    ) {
       configWithInfoPlist.modResults.NSUserTrackingUsageDescription =
         props.iosUserTrackingUsageDescription;
     }
+
+    const iosAppId = normalizeString(props?.iosAppId);
+    const iosTikTokAppIds = normalizeStringArray(props?.iosTikTokAppIds);
+
+    if (iosAppId != null) {
+      configWithInfoPlist.modResults[IOS_APP_ID_KEY] = iosAppId;
+    } else {
+      delete configWithInfoPlist.modResults[IOS_APP_ID_KEY];
+    }
+
+    if (iosTikTokAppIds.length > 0) {
+      configWithInfoPlist.modResults[IOS_TIKTOK_APP_IDS_KEY] =
+        iosTikTokAppIds.join(',');
+    } else {
+      delete configWithInfoPlist.modResults[IOS_TIKTOK_APP_IDS_KEY];
+    }
+
     return configWithInfoPlist;
+  });
+}
+
+function withAndroidTikTokDefaults(config, props) {
+  return withAndroidManifest(config, (configWithAndroidManifest) => {
+    const application = AndroidConfig.Manifest.getMainApplicationOrThrow(
+      configWithAndroidManifest.modResults
+    );
+
+    setMetaDataItem(
+      application,
+      ANDROID_APP_ID_KEY,
+      normalizeString(props?.androidAppId)
+    );
+
+    const androidTikTokAppIds = normalizeStringArray(
+      props?.androidTikTokAppIds
+    );
+    setMetaDataItem(
+      application,
+      ANDROID_TIKTOK_APP_IDS_KEY,
+      androidTikTokAppIds.length > 0 ? androidTikTokAppIds.join(',') : undefined
+    );
+
+    return configWithAndroidManifest;
   });
 }
 
 const withTikTokAppEvents = (config, props = {}) => {
   config = withAndroidJitPackRepository(config);
   config = withIosModularHeaders(config);
-  config = withOptionalTrackingUsageDescription(config, props);
+  config = withAndroidTikTokDefaults(config, props);
+  config = withIosTikTokDefaults(config, props);
   return config;
 };
 

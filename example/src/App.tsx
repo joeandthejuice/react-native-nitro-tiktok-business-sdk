@@ -31,7 +31,7 @@ export default function App() {
   const [initializationMode, setInitializationMode] =
     useState<InitializationMode>('idle');
   const [logs, setLogs] = useState<string[]>([
-    'Fill in your TikTok access token, app ID, and TikTok App ID, then choose a tracking-enabled or delayed-tracking init flow.',
+    'Fill in your TikTok access token. App ID and TikTok App ID can come from the Expo plugin or be entered here before you choose a tracking-enabled or delayed-tracking init flow.',
   ]);
 
   function appendLog(message: string) {
@@ -212,7 +212,7 @@ export default function App() {
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setAppId}
-            placeholder="App ID"
+            placeholder="App ID (optional if set in Expo plugin)"
             placeholderTextColor="#7f8896"
             style={styles.input}
             value={appId}
@@ -221,7 +221,7 @@ export default function App() {
             autoCapitalize="none"
             autoCorrect={false}
             onChangeText={setTikTokAppId}
-            placeholder="TikTok App ID or comma-separated IDs"
+            placeholder="TikTok App ID(s) (optional if set in Expo plugin)"
             placeholderTextColor="#7f8896"
             style={styles.input}
             value={tikTokAppId}

@@ -58,6 +58,15 @@ NSArray<NSString *> *toNSStringArray(const std::vector<std::string> &values) {
   return result;
 }
 
+NSArray<NSString *> *toNullableNSStringArray(
+    const std::optional<std::vector<std::string>> &values) {
+  if (!values.has_value()) {
+    return nil;
+  }
+
+  return toNSStringArray(*values);
+}
+
 id anyValueToNSObject(const AnyValue &value);
 
 NSArray *anyArrayToNSArray(const AnyArray &array) {
@@ -130,11 +139,6 @@ std::string trimString(const std::string &value) {
 
 std::shared_ptr<Promise<void>>
 HybridTikTokAppEvents::initialize(const TikTokInitializeOptions &options) {
-  if (options.tikTokAppIds.empty()) {
-    return Promise<void>::rejected(
-        makeException(@"At least one TikTok App ID is required."));
-  }
-
   if ([TikTokAppEventsIosFacade isInitialized]) {
     return Promise<void>::resolved();
   }
@@ -144,8 +148,13 @@ HybridTikTokAppEvents::initialize(const TikTokInitializeOptions &options) {
 
   NSMutableDictionary<NSString *, id> *nativeOptions = [[NSMutableDictionary alloc] init];
   nativeOptions[@"accessToken"] = toNSString(options.accessToken);
-  nativeOptions[@"appId"] = toNSString(options.appId);
-  nativeOptions[@"tikTokAppIds"] = toNSStringArray(options.tikTokAppIds);
+  if (NSString *appId = toNullableNSString(options.appId)) {
+    nativeOptions[@"appId"] = appId;
+  }
+  if (NSArray<NSString *> *tikTokAppIds =
+          toNullableNSStringArray(options.tikTokAppIds)) {
+    nativeOptions[@"tikTokAppIds"] = tikTokAppIds;
+  }
 
   if (NSNumber *value = toNullableBoolNumber(options.trackingEnabled)) {
     nativeOptions[@"trackingEnabled"] = value;

@@ -2,8 +2,8 @@ import type { AnyMap, HybridObject } from 'react-native-nitro-modules';
 
 export interface TikTokInitializeOptions {
   accessToken: string;
-  appId: string;
-  tikTokAppIds: string[];
+  appId?: string;
+  tikTokAppIds?: string[];
   trackingEnabled?: boolean;
   automaticTrackingEnabled?: boolean;
   installTrackingEnabled?: boolean;

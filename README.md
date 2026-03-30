@@ -55,6 +55,8 @@ You will also need your TikTok Events Manager credentials:
 - `appId`: Android package name or iOS App Store ID
 - `tikTokAppId`: your TikTok App ID from Events Manager
 
+`accessToken` remains a runtime value in this library. `appId` and `tikTokAppId` can either be passed at runtime or configured as native defaults through the Expo plugin.
+
 ### Expo / prebuild projects
 
 Add the package and plugin:
@@ -64,6 +66,9 @@ plugins: [
   [
     '@joeandthejuice/react-native-nitro-tiktok-business-sdk',
     {
+      iosAppId: '1234567890',
+      iosTikTokAppIds: ['1234567890123456789'],
+      androidTikTokAppIds: ['9876543210987654321'],
       iosUserTrackingUsageDescription:
         'This identifier will be used to deliver personalized ads to you.'
     }
@@ -76,6 +81,17 @@ The plugin ensures:
 - the JitPack repository is present for Android
 - `use_modular_headers!` is added to the iOS Podfile so `TikTokBusinessSDK` can be imported in the iOS bridge target
 - `NSUserTrackingUsageDescription` can be set when needed
+- iOS build-time defaults for `appId` and `tikTokAppId(s)` can be written into `Info.plist`
+- Android build-time defaults for `tikTokAppId(s)` and optional `appId` overrides can be written into the app manifest
+
+Recommended split:
+
+- configure `iosAppId`, `iosTikTokAppIds`, and `androidTikTokAppIds` in the plugin because they are usually stable per build profile
+- only set `androidAppId` in the plugin if you explicitly need to override the default package-name behavior
+- leave `accessToken` at runtime
+- use runtime `appId` or `tikTokAppId` only when you need to override the plugin defaults
+
+Plugin changes require a rebuild or prebuild sync. Runtime initialization changes do not.
 
 ### Bare React Native projects
 
@@ -95,8 +111,6 @@ import {
 
 await TikTokAppEventsModule.initialize({
   accessToken: 'YOUR_ACCESS_TOKEN',
-  appId: 'com.example.myapp',
-  tikTokAppId: '1234567890123456789',
   trackingEnabled: false,
   logLevel: __DEV__ ? 'debug' : 'none',
 })
@@ -140,6 +154,13 @@ const deferredUrl = await TikTokAppEventsModule.fetchDeferredDeepLink()
 ### `initialize(options)`
 
 Initializes the TikTok SDK with your access token, app ID, and TikTok App ID(s).
+
+- `accessToken` is always required at runtime.
+- `appId` is optional when:
+  - iOS default `iosAppId` is configured in the Expo plugin, or
+  - Android should use the application package name
+- `tikTokAppId` is optional when platform defaults are configured in the Expo plugin
+- runtime values override plugin defaults when both are provided
 
 ### `startTracking()`
 

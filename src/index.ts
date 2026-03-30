@@ -40,7 +40,7 @@ export type TikTokStandardEventName =
 
 export interface InitializeTikTokAppEventsOptions
   extends Omit<TikTokInitializeOptions, 'tikTokAppIds'> {
-  tikTokAppId: string | string[];
+  tikTokAppId?: string | string[];
 }
 
 let nativeModule: NativeTikTokAppEvents | undefined;
@@ -68,7 +68,13 @@ function normalizeEmail(value?: string): string | undefined {
   return normalized?.toLowerCase();
 }
 
-function normalizeTikTokAppIds(value: string | string[]): string[] {
+function normalizeTikTokAppIds(
+  value?: string | string[]
+): string[] | undefined {
+  if (value == null) {
+    return undefined;
+  }
+
   const ids = Array.isArray(value)
     ? value
     : value
@@ -103,6 +109,7 @@ export const TikTokAppEventsModule = {
 
     return getNativeModule().initialize({
       ...rest,
+      appId: normalizeString(rest.appId),
       tikTokAppIds: normalizeTikTokAppIds(tikTokAppId),
     });
   },
