@@ -2,7 +2,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "paths": {
-      "@joeandthejuice/react-native-nitro-tiktok-business-sdk": ["./src/index"]
+      "@joejuice/react-native-nitro-tiktok-business-sdk": ["./src/index"]
     },
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,

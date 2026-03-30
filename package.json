@@ -1,5 +1,5 @@
 {
-  "name": "@joeandthejuice/react-native-nitro-tiktok-business-sdk",
+  "name": "@joejuice/react-native-nitro-tiktok-business-sdk",
   "version": "1.0.0",
   "description": "Nitro-based React Native bridge for the TikTok Business App Events SDK (App Events scope).",
   "main": "./lib/module/index.js",

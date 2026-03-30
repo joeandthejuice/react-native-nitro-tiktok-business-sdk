@@ -26,7 +26,7 @@
     },
     "plugins": [
       [
-        "@joeandthejuice/react-native-nitro-tiktok-business-sdk",
+        "@joejuice/react-native-nitro-tiktok-business-sdk",
         {
           "iosUserTrackingUsageDescription": "This identifier will be used to deliver personalized ads to you."
         }

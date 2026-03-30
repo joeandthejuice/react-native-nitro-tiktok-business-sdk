@@ -1,6 +1,6 @@
-# @joeandthejuice/react-native-nitro-tiktok-business-sdk
+# @joejuice/react-native-nitro-tiktok-business-sdk
 
-`@joeandthejuice/react-native-nitro-tiktok-business-sdk` is a Nitro Modules bridge for the TikTok Business App Events SDK on iOS and Android.
+`@joejuice/react-native-nitro-tiktok-business-sdk` is a Nitro Modules bridge for the TikTok Business App Events SDK on iOS and Android.
 
 ## Scope
 
@@ -53,7 +53,7 @@ If you need to test deferred deep links on iOS, initialize with tracking enabled
 Install the library and Nitro runtime:
 
 ```sh
-yarn add @joeandthejuice/react-native-nitro-tiktok-business-sdk react-native-nitro-modules
+yarn add @joejuice/react-native-nitro-tiktok-business-sdk react-native-nitro-modules
 ```
 
 You will also need your TikTok Events Manager credentials:
@@ -71,7 +71,7 @@ Add the package and plugin:
 ```ts
 plugins: [
   [
-    '@joeandthejuice/react-native-nitro-tiktok-business-sdk',
+    '@joejuice/react-native-nitro-tiktok-business-sdk',
     {
       iosAppId: '1234567890',
       iosTikTokAppIds: ['1234567890123456789'],
@@ -114,7 +114,7 @@ Plugin changes require a rebuild or prebuild sync. Runtime initialization change
 import {
   TikTokAppEventsModule,
   TikTokStandardEventNames,
-} from '@joeandthejuice/react-native-nitro-tiktok-business-sdk'
+} from '@joejuice/react-native-nitro-tiktok-business-sdk'
 
 await TikTokAppEventsModule.initialize({
   accessToken: 'YOUR_ACCESS_TOKEN',

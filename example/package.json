@@ -8,7 +8,7 @@
     "ios": "expo run:ios"
   },
   "dependencies": {
-    "@joeandthejuice/react-native-nitro-tiktok-business-sdk": "workspace:*",
+    "@joejuice/react-native-nitro-tiktok-business-sdk": "workspace:*",
     "expo": "~54.0.33",
     "expo-status-bar": "~3.0.9",
     "react": "19.1.0",

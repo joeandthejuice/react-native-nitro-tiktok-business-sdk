@@ -12,7 +12,7 @@ import {
 import {
   TikTokAppEventsModule,
   TikTokStandardEventNames,
-} from '@joeandthejuice/react-native-nitro-tiktok-business-sdk';
+} from '@joejuice/react-native-nitro-tiktok-business-sdk';
 
 function nowLabel(): string {
   return new Date().toLocaleTimeString();
