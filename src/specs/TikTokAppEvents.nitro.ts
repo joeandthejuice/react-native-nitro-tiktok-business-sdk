@@ -40,6 +40,7 @@ export interface TikTokAppEvents
   startTracking(): void;
   identify(identity: TikTokIdentity): void;
   logout(): void;
+  flush(): void;
   trackEvent(event: TikTokEvent): void;
   fetchDeferredDeepLink(): Promise<string | undefined>;
 }

@@ -107,6 +107,15 @@ export default function App() {
     }
   }
 
+  function flush() {
+    try {
+      TikTokAppEventsModule.flush();
+      appendLog('Flush requested from the TikTok SDK.');
+    } catch (error) {
+      appendLog(`Flush failed: ${String(error)}`);
+    }
+  }
+
   function trackRegistration() {
     try {
       TikTokAppEventsModule.trackStandardEvent(
@@ -279,6 +288,7 @@ export default function App() {
           <DemoButton label="Start Tracking" onPress={startTracking} />
           <DemoButton label="Identify" onPress={identify} />
           <DemoButton label="Logout" onPress={logout} />
+          <DemoButton label="Flush Events" onPress={flush} />
           <DemoButton label="Track Registration" onPress={trackRegistration} />
           <DemoButton label="Track Purchase" onPress={trackPurchase} />
           <DemoButton label="Track Custom Event" onPress={trackCustomEvent} />

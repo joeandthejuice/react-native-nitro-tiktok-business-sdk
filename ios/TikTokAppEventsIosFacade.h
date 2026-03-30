@@ -13,6 +13,7 @@ typedef void (^TikTokAppEventsDeferredDeepLinkCompletion)(NSString *_Nullable ur
 + (void)startTracking;
 + (void)identifyWithIdentity:(NSDictionary<NSString *, id> *)identity;
 + (void)logout;
++ (void)flush;
 + (void)trackEventWithName:(NSString *)name
                 properties:(NSDictionary<NSString *, id> *)properties
                    eventId:(nullable NSString *)eventId;

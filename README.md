@@ -6,7 +6,7 @@
 
 - Supports the standalone TikTok App Events SDK.
 - The current surface area is App Events only, despite the broader package name.
-- Exposes a small cross-platform JS API for initialization, consent-gated tracking, identity, event tracking, and deferred deep links.
+- Exposes a small cross-platform JS API for initialization, consent-gated tracking, identity, event tracking, manual flushes, and deferred deep links.
 - Uses Nitro `AnyMap` payloads so event properties can contain nested objects and arrays without stringifying JSON.
 
 The Android combined TikTok App Events + Pangle SDK is not wired in this first version.
@@ -147,6 +147,8 @@ TikTokAppEventsModule.trackStandardEvent(
 )
 
 const deferredUrl = await TikTokAppEventsModule.fetchDeferredDeepLink()
+
+TikTokAppEventsModule.flush()
 ```
 
 ## API
@@ -169,6 +171,10 @@ Controls consent-gated tracking. If initialized with tracking disabled, calling 
 ### `identify(identity)` / `logout()`
 
 Wraps TikTok advanced matching identity calls.
+
+### `flush()`
+
+Forces the TikTok SDK to flush queued events immediately. This is mainly useful for integration testing and rare operational cases where you do not want to wait for the normal batch interval.
 
 ### `trackEvent(event)`
 
@@ -193,6 +199,7 @@ Fetches a deferred deep link after SDK initialization.
 
 - `logLevel` controls SDK log verbosity.
 - `debugModeEnabled` is a separate TikTok SDK mode. Leave it off for normal integration validation. On Android, TikTok's SDK can post the batch request and still count queued events as discarded when debug mode is enabled.
+- Android automatic Google Play purchase tracking is not a focus of this package today. Manual purchase event tracking works, but Google Play Billing auto-IAP wiring is intentionally not included by default.
 
 ## License And Compliance
 

@@ -13,6 +13,7 @@ public:
   void startTracking() override;
   void identify(const TikTokIdentity& identity) override;
   void logout() override;
+  void flush() override;
   void trackEvent(const TikTokEvent& event) override;
   std::shared_ptr<Promise<std::optional<std::string>>>
   fetchDeferredDeepLink() override;

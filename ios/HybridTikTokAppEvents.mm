@@ -246,6 +246,10 @@ void HybridTikTokAppEvents::logout() {
   [TikTokAppEventsIosFacade logout];
 }
 
+void HybridTikTokAppEvents::flush() {
+  [TikTokAppEventsIosFacade flush];
+}
+
 void HybridTikTokAppEvents::trackEvent(const TikTokEvent &event) {
   auto normalizedName = normalizeString(std::optional<std::string>(event.name));
   if (!normalizedName.has_value()) {

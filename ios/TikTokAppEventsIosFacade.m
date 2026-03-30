@@ -173,6 +173,12 @@ static BOOL TikTokAppEventsSdkConfigured = NO;
   }];
 }
 
++ (void)flush {
+  [self runOnMain:^{
+    [TikTokBusiness explicitlyFlush];
+  }];
+}
+
 + (void)trackEventWithName:(NSString *)name
                 properties:(NSDictionary<NSString *, id> *)properties
                    eventId:(nullable NSString *)eventId {

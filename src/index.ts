@@ -131,6 +131,10 @@ export const TikTokAppEventsModule = {
     getNativeModule().logout();
   },
 
+  flush() {
+    getNativeModule().flush();
+  },
+
   trackEvent(event: TikTokEvent) {
     getNativeModule().trackEvent(normalizeEvent(event));
   },
@@ -148,8 +152,13 @@ export const TikTokAppEventsModule = {
   },
 
   trackCustomEvent(name: string, properties?: AnyMap, eventId?: string) {
+    const normalizedName = normalizeString(name);
+    if (normalizedName == null) {
+      throw new Error('TikTok event name cannot be empty.');
+    }
+
     getNativeModule().trackEvent({
-      name,
+      name: normalizedName,
       eventId: normalizeString(eventId),
       properties,
     });

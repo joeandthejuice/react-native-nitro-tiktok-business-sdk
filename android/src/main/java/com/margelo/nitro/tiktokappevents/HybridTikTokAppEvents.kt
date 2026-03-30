@@ -157,6 +157,12 @@ class HybridTikTokAppEvents : HybridTikTokAppEventsSpec() {
     }
   }
 
+  override fun flush() {
+    mainHandler.post {
+      TikTokBusinessSdk.flush()
+    }
+  }
+
   override fun trackEvent(event: TikTokEvent) {
     val eventName = event.name.trim()
     require(eventName.isNotEmpty()) { "TikTok event name cannot be empty." }
