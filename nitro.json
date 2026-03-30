@@ -1,0 +1,17 @@
+{
+  "cxxNamespace": ["tiktokappevents"],
+  "ios": {
+    "iosModuleName": "TiktokAppEvents"
+  },
+  "android": {
+    "androidNamespace": ["tiktokappevents"],
+    "androidCxxLibName": "tiktokappevents"
+  },
+  "autolinking": {
+    "TiktokAppEvents": {
+      "swift": "TiktokAppEvents",
+      "kotlin": "TiktokAppEvents"
+    }
+  },
+  "ignorePaths": ["node_modules"]
+}
