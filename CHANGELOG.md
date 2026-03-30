@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.0...v1.0.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* rename package scope to joejuice ([68919e4](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/68919e48024ef152bdca949a69401a71a1d368a4))
+
 ## 1.0.0 (2026-03-30)
 
 
