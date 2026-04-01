@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.1.0...v1.1.1) (2026-04-01)
+
+
+### Bug Fixes
+
+* include cpp headers in the published package for iOS builds
+
 ## [1.1.0](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.0.3...v1.1.0) (2026-03-30)
 
 
