@@ -2,9 +2,10 @@ const {
   AndroidConfig,
   createRunOncePlugin,
   withAndroidManifest,
+  withBaseMod,
   withDangerousMod,
   withInfoPlist,
-} = require('@expo/config-plugins');
+} = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('../package.json');
@@ -102,43 +103,29 @@ function withAndroidJitPackRepository(config) {
   ]);
 }
 
-function ensureUseModularHeaders(contents) {
-  if (contents.includes('use_modular_headers!')) {
-    return contents;
-  }
-
-  const targetPattern = /^target\s+['"][^'"]+['"]\s+do$/m;
-  if (targetPattern.test(contents)) {
-    return contents.replace(
-      targetPattern,
-      (match) => `${match}\n  use_modular_headers!`
-    );
-  }
-
-  return contents;
-}
-
-function withIosModularHeaders(config) {
-  return withDangerousMod(config, [
-    'ios',
-    async (exportedConfig) => {
-      const projectRoot = exportedConfig.modRequest.projectRoot;
-      const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
-
-      if (!fs.existsSync(podfilePath)) {
-        return exportedConfig;
+function withIosTikTokBusinessSDKModularHeaders(config) {
+  return withBaseMod(config, {
+    platform: 'ios',
+    mod: 'podfileProperties',
+    isIntrospective: true,
+    async action(exportedConfig) {
+      // Build properties replaces extraPods, so merge after its mod in either order.
+      const result = await exportedConfig.modRequest.nextMod(exportedConfig);
+      const extraPods = JSON.parse(
+        result.modResults['apple.extraPods'] ?? '[]'
+      );
+      const tikTokPod = extraPods.find(
+        (pod) => pod.name === 'TikTokBusinessSDK'
+      );
+      if (tikTokPod) {
+        tikTokPod.modular_headers = true;
+      } else {
+        extraPods.push({ name: 'TikTokBusinessSDK', modular_headers: true });
       }
-
-      const current = fs.readFileSync(podfilePath, 'utf8');
-      const updated = ensureUseModularHeaders(current);
-
-      if (updated !== current) {
-        fs.writeFileSync(podfilePath, updated);
-      }
-
-      return exportedConfig;
+      result.modResults['apple.extraPods'] = JSON.stringify(extraPods);
+      return result;
     },
-  ]);
+  });
 }
 
 function withIosTikTokDefaults(config, props) {
@@ -198,7 +185,7 @@ function withAndroidTikTokDefaults(config, props) {
 
 const withTikTokAppEvents = (config, props = {}) => {
   config = withAndroidJitPackRepository(config);
-  config = withIosModularHeaders(config);
+  config = withIosTikTokBusinessSDKModularHeaders(config);
   config = withAndroidTikTokDefaults(config, props);
   config = withIosTikTokDefaults(config, props);
   return config;
