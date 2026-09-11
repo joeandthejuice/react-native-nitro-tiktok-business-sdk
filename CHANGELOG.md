@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.1.1...v1.1.2) (2026-09-11)
+
+
+### Bug Fixes
+
+* **expo:** scope TikTok modular headers ([#6](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/issues/6)) ([af79214](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/commit/af7921422a8ace8fcef88963b70f9fc3f2460007))
+
 ## [1.1.1](https://github.com/joeandthejuice/react-native-nitro-tiktok-business-sdk/compare/v1.1.0...v1.1.1) (2026-04-01)
 
 
