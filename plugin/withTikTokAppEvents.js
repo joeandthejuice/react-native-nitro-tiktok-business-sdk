@@ -102,8 +102,9 @@ function withAndroidJitPackRepository(config) {
   ]);
 }
 
-function ensureUseModularHeaders(contents) {
-  if (contents.includes('use_modular_headers!')) {
+function ensureTikTokBusinessSDKModularHeaders(contents) {
+  const tikTokPod = "pod 'TikTokBusinessSDK', :modular_headers => true";
+  if (contents.includes(tikTokPod)) {
     return contents;
   }
 
@@ -111,14 +112,14 @@ function ensureUseModularHeaders(contents) {
   if (targetPattern.test(contents)) {
     return contents.replace(
       targetPattern,
-      (match) => `${match}\n  use_modular_headers!`
+      (match) => `${match}\n  ${tikTokPod}`
     );
   }
 
   return contents;
 }
 
-function withIosModularHeaders(config) {
+function withIosTikTokBusinessSDKModularHeaders(config) {
   return withDangerousMod(config, [
     'ios',
     async (exportedConfig) => {
@@ -130,7 +131,7 @@ function withIosModularHeaders(config) {
       }
 
       const current = fs.readFileSync(podfilePath, 'utf8');
-      const updated = ensureUseModularHeaders(current);
+      const updated = ensureTikTokBusinessSDKModularHeaders(current);
 
       if (updated !== current) {
         fs.writeFileSync(podfilePath, updated);
@@ -198,7 +199,7 @@ function withAndroidTikTokDefaults(config, props) {
 
 const withTikTokAppEvents = (config, props = {}) => {
   config = withAndroidJitPackRepository(config);
-  config = withIosModularHeaders(config);
+  config = withIosTikTokBusinessSDKModularHeaders(config);
   config = withAndroidTikTokDefaults(config, props);
   config = withIosTikTokDefaults(config, props);
   return config;

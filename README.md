@@ -90,7 +90,7 @@ plugins: [
 ### What the plugin configures
 
 - adds JitPack to Android repositories when needed
-- adds `use_modular_headers!` to the iOS `Podfile` target when needed
+- enables modular headers only for `TikTokBusinessSDK` in the iOS `Podfile` target
 - writes iOS default `appId` and `tikTokAppId(s)` into `Info.plist`
 - writes Android default `tikTokAppId(s)` and optional `appId` into the manifest
 - optionally sets `NSUserTrackingUsageDescription`
@@ -104,6 +104,13 @@ Recommended split:
 
 Plugin changes require a rebuild or prebuild sync.
 
+When upgrading from version 1.1.1 or earlier, remove the old global header setting.
+For projects generated entirely by Expo, regenerate iOS with
+`npx expo prebuild --clean --platform ios`. For a manually maintained Podfile, replace
+`use_modular_headers!` added only for this package with
+`pod 'TikTokBusinessSDK', :modular_headers => true`. Keep global settings that
+other dependencies require.
+
 ## Bare React Native Setup
 
 If you are not using Expo config plugins:
@@ -111,7 +118,7 @@ If you are not using Expo config plugins:
 1. Install `react-native-nitro-modules`.
 2. Install this package.
 3. Add JitPack to your Android repositories if it is not already present.
-4. Add `use_modular_headers!` inside the relevant iOS `Podfile` target if it is not already present.
+4. Add `pod 'TikTokBusinessSDK', :modular_headers => true` inside the relevant iOS `Podfile` target if it is not already present.
 5. Run:
 
 ```sh
