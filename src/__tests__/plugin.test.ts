@@ -1,121 +1,118 @@
-import type { ConfigPlugin, ExportedConfig } from '@expo/config-plugins';
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmdirSync,
-  unlinkSync,
-  writeFileSync,
-} from 'node:fs';
-import { tmpdir } from 'node:os';
-import path from 'node:path';
+import { IOSConfig } from 'expo/config-plugins';
+import type { ConfigPlugin, ExportedConfig } from 'expo/config-plugins';
 
 const withTikTokAppEvents: ConfigPlugin = require('../../app.plugin');
 
-describe('Expo plugin iOS Podfile', () => {
-  let projectRoot: string;
-  let podfilePath: string;
+const tikTokPod = { name: 'TikTokBusinessSDK', modular_headers: true };
 
-  beforeEach(() => {
-    projectRoot = mkdtempSync(path.join(tmpdir(), 'tiktok-plugin-'));
-    mkdirSync(path.join(projectRoot, 'ios'));
-    podfilePath = path.join(projectRoot, 'ios', 'Podfile');
-  });
+function createConfig(): ExportedConfig {
+  return { name: 'Example', slug: 'example' };
+}
 
-  afterEach(() => {
-    unlinkSync(podfilePath);
-    rmdirSync(path.join(projectRoot, 'ios'));
-    rmdirSync(projectRoot);
-  });
-
-  async function applyIosPodfileMod() {
-    const config: ExportedConfig = withTikTokAppEvents({
-      name: 'Example',
-      slug: 'example',
-    });
-    const iosMod = config.mods?.ios?.dangerous;
-    if (!iosMod) {
-      throw new Error('The plugin must register an iOS Podfile mod.');
-    }
-
-    await iosMod({
-      ...config,
-      modResults: {},
-      modRawConfig: config,
-      modRequest: {
-        projectRoot,
-        platformProjectRoot: path.join(projectRoot, 'ios'),
-        platform: 'ios',
-        modName: 'dangerous',
-        introspect: false,
-      },
-    });
-
-    return readFileSync(podfilePath, 'utf8');
+async function applyIosPropertiesMod(
+  config: ExportedConfig = withTikTokAppEvents(createConfig()),
+  properties: Record<string, string> = {}
+) {
+  const iosMod = config.mods?.ios?.podfileProperties;
+  if (!iosMod) {
+    throw new Error('The plugin must register an iOS Podfile properties mod.');
   }
 
-  it.each(["'", '"'])(
-    'scopes modular headers to TikTokBusinessSDK with %s target quotes',
-    async (quote) => {
-      const target = `target ${quote}Example${quote} do`;
-      const original = `platform :ios, '15.1'
-
-${target}
-  use_expo_modules!
-  pod 'OtherSDK'
-end
-`;
-      writeFileSync(podfilePath, original);
-
-      const updated = await applyIosPodfileMod();
-
-      expect(updated).toBe(`platform :ios, '15.1'
-
-${target}
-  pod 'TikTokBusinessSDK', :modular_headers => true
-  use_expo_modules!
-  pod 'OtherSDK'
-end
-`);
-      expect(updated).not.toContain('use_modular_headers!');
-    }
-  );
-
-  it('keeps the Podfile unchanged on a second prebuild', async () => {
-    writeFileSync(
-      podfilePath,
-      "target 'Example' do\n  use_expo_modules!\nend\n"
-    );
-
-    const first = await applyIosPodfileMod();
-    const second = await applyIosPodfileMod();
-
-    expect(first).toContain(
-      "pod 'TikTokBusinessSDK', :modular_headers => true"
-    );
-    expect(second).toBe(first);
-    expect(second.match(/pod 'TikTokBusinessSDK'/g)).toHaveLength(1);
+  const result = await iosMod({
+    ...config,
+    modResults: properties,
+    modRawConfig: config,
+    modRequest: {
+      projectRoot: '/example',
+      platformProjectRoot: '/example/ios',
+      platform: 'ios',
+      modName: 'podfileProperties',
+      introspect: true,
+    },
   });
 
-  it.each([
-    ['root', "use_modular_headers!\n\ntarget 'Example' do\nend\n"],
-    ['target', "target 'Example' do\n  use_modular_headers!\nend\n"],
-  ])(
-    'preserves a pre-existing global header setting at the %s',
-    async (_location, original) => {
-      writeFileSync(podfilePath, original);
+  return result.modResults;
+}
 
-      const updated = await applyIosPodfileMod();
+describe('Expo plugin iOS Podfile properties', () => {
+  it('adds only TikTok modular headers and preserves other properties', async () => {
+    const result = await applyIosPropertiesMod(undefined, {
+      'ios.useFrameworks': 'static',
+    });
 
-      expect(updated).toContain(
-        "pod 'TikTokBusinessSDK', :modular_headers => true"
-      );
-      expect(
-        updated.replace(
-          "  pod 'TikTokBusinessSDK', :modular_headers => true\n",
-          ''
-        )
-      ).toBe(original);
+    expect(result).toEqual({
+      'ios.useFrameworks': 'static',
+      'apple.extraPods': JSON.stringify([tikTokPod]),
+    });
+  });
+
+  it('preserves other pods and existing TikTok options', async () => {
+    const otherPod = { name: 'OtherSDK', modular_headers: false };
+    const existingTikTokPod = {
+      name: 'TikTokBusinessSDK',
+      version: '1.5.0',
+      source: 'https://cdn.cocoapods.org/',
+      configurations: ['Release'],
+      modular_headers: false,
+    };
+    const result = await applyIosPropertiesMod(undefined, {
+      'apple.extraPods': JSON.stringify([otherPod, existingTikTokPod]),
+    });
+
+    expect(JSON.parse(result['apple.extraPods']!)).toEqual([
+      otherPod,
+      { ...existingTikTokPod, modular_headers: true },
+    ]);
+  });
+
+  it('does not add another TikTok pod on a second prebuild', async () => {
+    const first = await applyIosPropertiesMod();
+    const second = await applyIosPropertiesMod(undefined, { ...first });
+
+    expect(second).toEqual(first);
+    expect(JSON.parse(second['apple.extraPods']!)).toEqual([tikTokPod]);
+  });
+
+  it.each(['before', 'after'])(
+    'preserves build properties when registered %s its static mod',
+    async (order) => {
+      const extraPods = [
+        { name: 'OtherSDK' },
+        { name: 'TikTokBusinessSDK', version: '1.5.0' },
+      ];
+      const withBuildProperties =
+        IOSConfig.BuildProperties.createBuildPodfilePropsConfigPlugin([
+          {
+            propName: 'apple.extraPods',
+            propValueGetter: () => JSON.stringify(extraPods),
+          },
+        ]);
+      let config = createConfig();
+      if (order === 'before') {
+        config = withBuildProperties(withTikTokAppEvents(config));
+      } else {
+        config = withTikTokAppEvents(withBuildProperties(config));
+      }
+
+      const result = await applyIosPropertiesMod(config);
+
+      expect(JSON.parse(result['apple.extraPods']!)).toEqual([
+        extraPods[0],
+        { ...extraPods[1], modular_headers: true },
+      ]);
     }
   );
+
+  it('fails on invalid extraPods JSON', async () => {
+    await expect(
+      applyIosPropertiesMod(undefined, { 'apple.extraPods': '[' })
+    ).rejects.toThrow(SyntaxError);
+  });
+
+  it('registers a static iOS mod without an iOS dangerous mod', () => {
+    const config: ExportedConfig = withTikTokAppEvents(createConfig());
+
+    expect(config.mods?.ios?.dangerous).toBeUndefined();
+    expect(config.mods?.ios?.podfileProperties?.isIntrospective).toBe(true);
+  });
 });

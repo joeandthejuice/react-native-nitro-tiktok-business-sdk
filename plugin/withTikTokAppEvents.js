@@ -2,9 +2,10 @@ const {
   AndroidConfig,
   createRunOncePlugin,
   withAndroidManifest,
+  withBaseMod,
   withDangerousMod,
   withInfoPlist,
-} = require('@expo/config-plugins');
+} = require('expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 const pkg = require('../package.json');
@@ -102,44 +103,29 @@ function withAndroidJitPackRepository(config) {
   ]);
 }
 
-function ensureTikTokBusinessSDKModularHeaders(contents) {
-  const tikTokPod = "pod 'TikTokBusinessSDK', :modular_headers => true";
-  if (contents.includes(tikTokPod)) {
-    return contents;
-  }
-
-  const targetPattern = /^target\s+['"][^'"]+['"]\s+do$/m;
-  if (targetPattern.test(contents)) {
-    return contents.replace(
-      targetPattern,
-      (match) => `${match}\n  ${tikTokPod}`
-    );
-  }
-
-  return contents;
-}
-
 function withIosTikTokBusinessSDKModularHeaders(config) {
-  return withDangerousMod(config, [
-    'ios',
-    async (exportedConfig) => {
-      const projectRoot = exportedConfig.modRequest.projectRoot;
-      const podfilePath = path.join(projectRoot, 'ios', 'Podfile');
-
-      if (!fs.existsSync(podfilePath)) {
-        return exportedConfig;
+  return withBaseMod(config, {
+    platform: 'ios',
+    mod: 'podfileProperties',
+    isIntrospective: true,
+    async action(exportedConfig) {
+      // Build properties replaces extraPods, so merge after its mod in either order.
+      const result = await exportedConfig.modRequest.nextMod(exportedConfig);
+      const extraPods = JSON.parse(
+        result.modResults['apple.extraPods'] ?? '[]'
+      );
+      const tikTokPod = extraPods.find(
+        (pod) => pod.name === 'TikTokBusinessSDK'
+      );
+      if (tikTokPod) {
+        tikTokPod.modular_headers = true;
+      } else {
+        extraPods.push({ name: 'TikTokBusinessSDK', modular_headers: true });
       }
-
-      const current = fs.readFileSync(podfilePath, 'utf8');
-      const updated = ensureTikTokBusinessSDKModularHeaders(current);
-
-      if (updated !== current) {
-        fs.writeFileSync(podfilePath, updated);
-      }
-
-      return exportedConfig;
+      result.modResults['apple.extraPods'] = JSON.stringify(extraPods);
+      return result;
     },
-  ]);
+  });
 }
 
 function withIosTikTokDefaults(config, props) {

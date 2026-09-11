@@ -90,7 +90,7 @@ plugins: [
 ### What the plugin configures
 
 - adds JitPack to Android repositories when needed
-- enables modular headers only for `TikTokBusinessSDK` in the iOS `Podfile` target
+- enables modular headers only for `TikTokBusinessSDK` through Expo's `Podfile.properties.json`
 - writes iOS default `appId` and `tikTokAppId(s)` into `Info.plist`
 - writes Android default `tikTokAppId(s)` and optional `appId` into the manifest
 - optionally sets `NSUserTrackingUsageDescription`
@@ -103,6 +103,11 @@ Recommended split:
 - only pass runtime `appId` or `tikTokAppId` when you intentionally want to override plugin defaults
 
 Plugin changes require a rebuild or prebuild sync.
+
+The iOS plugin merges its pod entry into `apple.extraPods` for Expo Autolinking.
+It preserves other pod entries and existing TikTok pod options. It does not edit
+the Podfile or require `expo-build-properties`. This uses Expo's
+[static Podfile configuration](https://docs.expo.dev/config-plugins/development-and-debugging/#modify-ios-podfile).
 
 When upgrading from version 1.1.1 or earlier, remove the old global header setting.
 For projects generated entirely by Expo, regenerate iOS with
